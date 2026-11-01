@@ -2,14 +2,24 @@
 
 <div align="center">
 
-<img src="https://img.shields.io/badge/Версия-v1.9.2-00FF9C?style=for-the-badge&logoColor=black" alt="Version 1.9.2"/>
+<img src="https://img.shields.io/badge/Версия-v1.9.3-00FF9C?style=for-the-badge&logoColor=black" alt="Version 1.9.3"/>
 <img src="https://img.shields.io/badge/Статус-Release-2c5364?style=for-the-badge" alt="Status"/>
 
 </div>
 
 ---
 
-## ⚡ Версия 1.9.2 *(Текущая)*
+## ⚡ Версия 1.9.3 *(Текущая)*
+
+### 🚀 4 Прорывных модуля: NanoJIT, NanoMesh, NanoDungeon, NanoLens
+* **NanoJIT (Адаптивный JIT-компилятор):** компиляция выражений NanoScript на лету в JVM-функции на частых событиях с нулевым оверхедом.
+* **NanoMesh (Сетевой кластер):** межсерверная синхронизация через Plugin Messaging и Redis, сетевые переменные `scope: network`, кросс-серверный бродкаст и события `NanoNetworkEvent`.
+* **NanoDungeon (Процедурные данжи и авто-шахты):** генерация временных локаций по `.nbt` структурам и авто-шахт с автоматическим откатом блоков после окончания таймера.
+* **NanoLens (Hot-Swap, Profiler & Inspector):** мгновенное применение изменений аддонов на лету (`WatchService`), профайлер микросекунд (`/nano profile`) и визуальный дебаггер векторов (`/nano inspect`).
+
+---
+
+## ⚡ Версия 1.9.2
 
 ### 🚀 5 Флагманских модулей: Raytracing, Webhook Server, PDC Engine, Event Bus, Holograms
 * **Визуальная трассировка лучей и снаряды (`raytrace:`):** лазеры, заклинания и пушки с партиклами и колбэками `on_hit` и `on_hit_block`.

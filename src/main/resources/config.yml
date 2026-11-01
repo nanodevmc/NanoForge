@@ -27,5 +27,15 @@ webhook-server:
   port: 8085
   secret-token: "nano-secret-token"
 
-# by t.me/NanoDev_mc
+# Сетевой кластер NanoMesh (синхронизация переменных и событий между серверами сети).
+# По умолчанию работает через BungeeCord / Velocity Plugin Messaging (канал nanoforge:cluster).
+# Опционально можно включить нативный легковесный сокет Redis.
+cluster:
+  server-name: "server-1"
+  redis:
+    enabled: false
+    host: "127.0.0.1"
+    port: 6379
+    password: ""
 
+# by t.me/NanoDev_mc

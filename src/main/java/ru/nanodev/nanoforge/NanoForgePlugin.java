@@ -73,6 +73,10 @@ public class NanoForgePlugin extends JavaPlugin {
             ru.nanodev.nanoforge.webhook.WebhookServer.start(port, token);
         }
 
+        ru.nanodev.nanoforge.cluster.ClusterManager.init(this);
+        ru.nanodev.nanoforge.dungeon.DungeonManager.init(this);
+        ru.nanodev.nanoforge.debug.AddonFileWatcher.init(this);
+
         if (getConfig().getBoolean("update-checker.enabled", true)) {
             boolean notifyConsole = getConfig().getBoolean("update-checker.notify-console", true);
             UpdateChecker.checkAsync(this, result -> {
@@ -115,6 +119,17 @@ public class NanoForgePlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         ru.nanodev.nanoforge.webhook.WebhookServer.stop();
+        if (ru.nanodev.nanoforge.cluster.ClusterManager.get() != null) {
+            ru.nanodev.nanoforge.cluster.ClusterManager.get().shutdown();
+        }
+        if (ru.nanodev.nanoforge.dungeon.DungeonManager.get() != null) {
+            ru.nanodev.nanoforge.dungeon.DungeonManager.get().shutdown();
+        }
+        if (ru.nanodev.nanoforge.debug.AddonFileWatcher.get() != null) {
+            ru.nanodev.nanoforge.debug.AddonFileWatcher.get().stop();
+        }
+        ru.nanodev.nanoforge.debug.NanoLens.clear();
+        ru.nanodev.nanoforge.script.NanoScript.clearCache();
         if (addonManager != null) {
             addonManager.disableAll();
         }

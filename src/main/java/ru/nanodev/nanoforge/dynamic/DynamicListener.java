@@ -92,6 +92,9 @@ public class DynamicListener implements Listener {
         if ("webhook".equalsIgnoreCase(rawTrimmed) || "nanowebhook".equalsIgnoreCase(rawTrimmed) || "nanowebhookevent".equalsIgnoreCase(rawTrimmed) || "webhook_received".equalsIgnoreCase(rawTrimmed)) {
             return ru.nanodev.nanoforge.event.NanoWebhookEvent.class;
         }
+        if ("network".equalsIgnoreCase(rawTrimmed) || "nanonetwork".equalsIgnoreCase(rawTrimmed) || "nanonetworkevent".equalsIgnoreCase(rawTrimmed) || "network_message".equalsIgnoreCase(rawTrimmed)) {
+            return ru.nanodev.nanoforge.event.NanoNetworkEvent.class;
+        }
         if (name.contains(".")) {
             try {
                 return (Class<? extends Event>) Class.forName(name);

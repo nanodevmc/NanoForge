@@ -72,6 +72,14 @@ public final class RaytraceRunner {
             hitDist = startLoc.toVector().distance(entityHit.getHitPosition());
         }
 
+        if (sourcePlayer != null && ru.nanodev.nanoforge.debug.NanoLens.isInspecting(sourcePlayer)) {
+            try {
+                sourcePlayer.sendMessage(org.bukkit.ChatColor.GRAY + "[NanoLens Raytrace] Dist: "
+                        + String.format("%.2f", hitDist) + " | Hit: "
+                        + (hitVictim != null ? hitVictim.getName() : (blockHit != null ? "Block" : "None")));
+            } catch (Throwable ignored) {}
+        }
+
         // Спавн визуальных партиклов по траектории луча
         if (particle != null) {
             try {

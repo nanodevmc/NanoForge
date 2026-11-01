@@ -1,5 +1,13 @@
 # BUILD_LOG
 
+## [2026-11-01] Версия 1.9.3 — NanoJIT, NanoMesh, NanoDungeon, NanoLens
+- **Что сделано:**
+  - Runtime JIT-компилятор NanoScript (NanoJitEngine, CompiledNanoExpression, адаптивное кэширование).
+  - Сетевой кластер NanoMesh (ClusterManager, NanoNetworkEvent, Plugin Messaging, нативный Redis сокет).
+  - Процедурные данжи и шахты NanoDungeon (DungeonManager, DungeonInstance, авто-восстановление блоков).
+  - Инструменты NanoLens (AddonFileWatcher Hot-Swap, AddonProfiler µs, инспектор векторов /nano inspect).
+  - Полное покрытие unit-тестами NanoForge193FeaturesTest.
+
 ## [2026-11-01] Версия 1.9.2 — Raytracing, Webhook Server, PDC Engine, Event Bus, Holograms
 - **Что сделано:**
   - Высокопроизводительный движок визуального рейтрейсинга и снарядов (`raytrace:`) с частицами и колбэками `on_hit` (с передачей жертвы) и `on_hit_block`.

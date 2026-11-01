@@ -82,6 +82,7 @@ public class ActionRunner {
             boolean debug = ru.nanodev.nanoforge.util.ActionDebugger.isEnabled(currentAddonName);
             String debugType = debug ? String.valueOf(action.getOrDefault("type", "?")) : null;
 
+            long profilerStart = System.nanoTime();
             try {
                 if (!ConditionChecker.check(action, player, event, currentAddon)) {
                     if (debug) {
@@ -248,9 +249,17 @@ public class ActionRunner {
                         if (currentAddon == null) break;
                         String key = String.valueOf(action.get("key"));
                         String value = PlaceholderUtil.apply(String.valueOf(action.get("value")), player, commandArgs);
-                        boolean global = "global".equalsIgnoreCase(String.valueOf(action.getOrDefault("scope", "player")));
-                        if (global) currentAddon.getStorage().setGlobalVar(key, value);
-                        else if (player != null) currentAddon.getStorage().setVar(player, key, value);
+                        String scope = String.valueOf(action.getOrDefault("scope", "player")).toLowerCase();
+                        if ("network".equals(scope) || "cluster".equals(scope)) {
+                            currentAddon.getStorage().setGlobalVar(key, value);
+                            if (ru.nanodev.nanoforge.cluster.ClusterManager.get() != null) {
+                                ru.nanodev.nanoforge.cluster.ClusterManager.get().sendVarSync(key, value);
+                            }
+                        } else if ("global".equals(scope)) {
+                            currentAddon.getStorage().setGlobalVar(key, value);
+                        } else if (player != null) {
+                            currentAddon.getStorage().setVar(player, key, value);
+                        }
                         break;
                     }
                     case "addvar": {
@@ -609,6 +618,65 @@ public class ActionRunner {
                         }
                         break;
                     }
+                    case "network_broadcast": {
+                        String rawMsg = String.valueOf(action.getOrDefault("message", action.getOrDefault("text", "")));
+                        String text = withResult(colorize(PlaceholderUtil.apply(rawMsg, player, commandArgs)), lastCallResult[0]);
+                        if (ru.nanodev.nanoforge.cluster.ClusterManager.get() != null) {
+                            ru.nanodev.nanoforge.cluster.ClusterManager.get().sendBroadcast(text);
+                        }
+                        break;
+                    }
+                    case "network_event": {
+                        String evName = String.valueOf(action.getOrDefault("event", action.getOrDefault("name", "")));
+                        if (!evName.isEmpty() && ru.nanodev.nanoforge.cluster.ClusterManager.get() != null) {
+                            java.util.Map<String, Object> data = new java.util.HashMap<>();
+                            Object dataObj = action.get("data");
+                            if (dataObj instanceof java.util.Map) {
+                                for (java.util.Map.Entry<?, ?> e : ((java.util.Map<?, ?>) dataObj).entrySet()) {
+                                    data.put(String.valueOf(e.getKey()), e.getValue());
+                                }
+                            }
+                            if (player != null) {
+                                data.putIfAbsent("player", player.getName());
+                            }
+                            ru.nanodev.nanoforge.cluster.ClusterManager.get().sendEvent(evName, data);
+                        }
+                        break;
+                    }
+                    case "dungeon_spawn": {
+                        String dId = String.valueOf(action.getOrDefault("id", "dungeon_" + System.currentTimeMillis()));
+                        String template = String.valueOf(action.getOrDefault("template", "default"));
+                        long durationTicks = parseDurationTicks(action.get("duration"), 6000L);
+                        long durationMs = (durationTicks / 20L) * 1000L;
+                        org.bukkit.Location loc = player != null ? player.getLocation() : null;
+                        if (action.containsKey("x") && action.containsKey("y") && action.containsKey("z")) {
+                            org.bukkit.World w = action.containsKey("world") ? org.bukkit.Bukkit.getWorld(String.valueOf(action.get("world"))) : (player != null ? player.getWorld() : null);
+                            if (w != null) {
+                                double x = ru.nanodev.nanoforge.util.NumberUtil.toDouble(action.get("x"), 0);
+                                double y = ru.nanodev.nanoforge.util.NumberUtil.toDouble(action.get("y"), 64);
+                                double z = ru.nanodev.nanoforge.util.NumberUtil.toDouble(action.get("z"), 0);
+                                loc = new org.bukkit.Location(w, x, y, z);
+                            }
+                        }
+                        if (loc != null && ru.nanodev.nanoforge.dungeon.DungeonManager.get() != null) {
+                            ru.nanodev.nanoforge.dungeon.DungeonManager.get().spawnDungeon(dId, template, loc, durationMs);
+                        }
+                        break;
+                    }
+                    case "dungeon_reset": {
+                        String dId = String.valueOf(action.getOrDefault("id", ""));
+                        if (!dId.isEmpty() && ru.nanodev.nanoforge.dungeon.DungeonManager.get() != null) {
+                            ru.nanodev.nanoforge.dungeon.DungeonManager.get().resetDungeon(dId);
+                        }
+                        break;
+                    }
+                    case "dungeon_clear": {
+                        String dId = String.valueOf(action.getOrDefault("id", ""));
+                        if (!dId.isEmpty() && ru.nanodev.nanoforge.dungeon.DungeonManager.get() != null) {
+                            ru.nanodev.nanoforge.dungeon.DungeonManager.get().clearDungeon(dId);
+                        }
+                        break;
+                    }
                     default:
                         Bukkit.getLogger().warning(ru.nanodev.nanoforge.util.Messages.get("engine.unknown-action-type", "type", type));
                 }
@@ -619,6 +687,8 @@ public class ActionRunner {
                 String addonLabel = currentAddonName != null ? currentAddonName : "?";
                 Bukkit.getLogger().warning(ru.nanodev.nanoforge.util.Messages.get("engine.action-error",
                         "addon", addonLabel, "type", action.getOrDefault("type", "?"), "error", t));
+            } finally {
+                ru.nanodev.nanoforge.debug.AddonProfiler.record(currentAddonName, String.valueOf(action.getOrDefault("type", "unknown")), System.nanoTime() - profilerStart);
             }
         }
     }
@@ -900,6 +970,39 @@ public class ActionRunner {
                 map.put("key", parts[0].trim());
                 map.put("value", stripQuotes(parts[1].trim()));
             }
+            return map;
+        }
+
+        if ("network_broadcast".equals(type)) {
+            map.put("type", "network_broadcast");
+            map.put("message", stripQuotes(rest));
+            return map;
+        }
+
+        if ("network_event".equals(type)) {
+            map.put("type", "network_event");
+            map.put("event", stripQuotes(rest));
+            return map;
+        }
+
+        if ("dungeon_spawn".equals(type)) {
+            map.put("type", "dungeon_spawn");
+            String[] parts = rest.split(",", 3);
+            if (parts.length >= 1) map.put("id", parts[0].trim());
+            if (parts.length >= 2) map.put("template", parts[1].trim());
+            if (parts.length >= 3) map.put("duration", parts[2].trim());
+            return map;
+        }
+
+        if ("dungeon_reset".equals(type)) {
+            map.put("type", "dungeon_reset");
+            map.put("id", stripQuotes(rest));
+            return map;
+        }
+
+        if ("dungeon_clear".equals(type)) {
+            map.put("type", "dungeon_clear");
+            map.put("id", stripQuotes(rest));
             return map;
         }
 

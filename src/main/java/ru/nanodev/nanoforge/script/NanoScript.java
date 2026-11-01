@@ -3,18 +3,25 @@ package ru.nanodev.nanoforge.script;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import ru.nanodev.nanoforge.model.Addon;
+import ru.nanodev.nanoforge.script.jit.CompiledNanoExpression;
+import ru.nanodev.nanoforge.script.jit.NanoJitEngine;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Главный фасад для NanoScript Expression Engine & Micro-VM.
- * Автоматически кэширует скомпилированный байткод и предоставляет удобные методы eval.
+ * Главный фасад для NanoScript Expression Engine, Micro-VM & NanoJIT.
+ * Автоматически кэширует скомпилированный байткод и адаптивно переводит горячие участки (Hot-Paths) в JIT.
  */
 public final class NanoScript {
 
     private static final int MAX_CACHE_SIZE = 1000;
+    private static final int JIT_THRESHOLD = 20;
+
     private static final Map<String, NanoProgram> PROGRAM_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, AtomicInteger> HIT_COUNTERS = new ConcurrentHashMap<>();
+    private static final Map<String, CompiledNanoExpression> JIT_CACHE = new ConcurrentHashMap<>();
 
     private NanoScript() {}
 
@@ -36,7 +43,22 @@ public final class NanoScript {
     }
 
     public static Object eval(String expression, NanoContext context) {
-        NanoProgram program = compile(expression);
+        if (expression == null || expression.trim().isEmpty()) return null;
+        String trimmed = expression.trim();
+
+        CompiledNanoExpression jit = JIT_CACHE.get(trimmed);
+        if (jit != null) {
+            return jit.eval(context);
+        }
+
+        NanoProgram program = compile(trimmed);
+        AtomicInteger counter = HIT_COUNTERS.computeIfAbsent(trimmed, k -> new AtomicInteger(0));
+        if (counter.incrementAndGet() >= JIT_THRESHOLD) {
+            CompiledNanoExpression compiled = NanoJitEngine.compile(program);
+            JIT_CACHE.put(trimmed, compiled);
+            return compiled.eval(context);
+        }
+
         return NanoVM.execute(program, context);
     }
 
@@ -47,15 +69,43 @@ public final class NanoScript {
 
     public static boolean evalBoolean(String expression, Player player, Event event, Addon addon) {
         if (expression == null || expression.trim().isEmpty()) return true;
+        String trimmed = expression.trim();
         NanoContext ctx = NanoContext.of(player, event, addon);
-        NanoProgram program = compile(expression);
+
+        CompiledNanoExpression jit = JIT_CACHE.get(trimmed);
+        if (jit != null) {
+            return jit.evalBoolean(ctx);
+        }
+
+        NanoProgram program = compile(trimmed);
+        AtomicInteger counter = HIT_COUNTERS.computeIfAbsent(trimmed, k -> new AtomicInteger(0));
+        if (counter.incrementAndGet() >= JIT_THRESHOLD) {
+            CompiledNanoExpression compiled = NanoJitEngine.compile(program);
+            JIT_CACHE.put(trimmed, compiled);
+            return compiled.evalBoolean(ctx);
+        }
+
         return NanoVM.executeBoolean(program, ctx);
     }
 
     public static double evalDouble(String expression, Player player, Event event, Addon addon) {
         if (expression == null || expression.trim().isEmpty()) return 0.0;
+        String trimmed = expression.trim();
         NanoContext ctx = NanoContext.of(player, event, addon);
-        NanoProgram program = compile(expression);
+
+        CompiledNanoExpression jit = JIT_CACHE.get(trimmed);
+        if (jit != null) {
+            return jit.evalDouble(ctx);
+        }
+
+        NanoProgram program = compile(trimmed);
+        AtomicInteger counter = HIT_COUNTERS.computeIfAbsent(trimmed, k -> new AtomicInteger(0));
+        if (counter.incrementAndGet() >= JIT_THRESHOLD) {
+            CompiledNanoExpression compiled = NanoJitEngine.compile(program);
+            JIT_CACHE.put(trimmed, compiled);
+            return compiled.evalDouble(ctx);
+        }
+
         return NanoVM.executeDouble(program, ctx);
     }
 
@@ -69,7 +119,14 @@ public final class NanoScript {
         return String.valueOf(val);
     }
 
+    public static boolean isJitCompiled(String expression) {
+        if (expression == null) return false;
+        return JIT_CACHE.containsKey(expression.trim());
+    }
+
     public static void clearCache() {
         PROGRAM_CACHE.clear();
+        HIT_COUNTERS.clear();
+        JIT_CACHE.clear();
     }
 }

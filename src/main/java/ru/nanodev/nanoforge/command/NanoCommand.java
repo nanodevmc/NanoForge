@@ -117,6 +117,20 @@ public class NanoCommand implements CommandExecutor, TabCompleter {
                 }
                 addonWizard.start((Player) sender);
                 return true;
+            case "profile":
+                for (String line : ru.nanodev.nanoforge.debug.AddonProfiler.dumpProfile()) {
+                    sender.sendMessage(line);
+                }
+                return true;
+            case "inspect":
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage(ChatColor.RED + "✖ Только для игроков!");
+                    return true;
+                }
+                boolean inspecting = ru.nanodev.nanoforge.debug.NanoLens.toggleInspect((Player) sender);
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                        "&8[&aNanoLens&8] &7Режим инспектора векторов: " + (inspecting ? "&aВКЛЮЧЕН" : "&cВЫКЛЮЧЕН")));
+                return true;
             default:
                 sendHelp(sender);
                 return true;
@@ -764,7 +778,7 @@ public class NanoCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             return filter(Arrays.asList("create", "enable", "disable", "list", "menu", "edit", "info", "reload",
-                    "duplicate", "export", "import", "vars", "validate", "get", "set", "diff", "debug", "update", "compile", "script", "wizard"), args[0]);
+                    "duplicate", "export", "import", "vars", "validate", "get", "set", "diff", "debug", "update", "compile", "script", "wizard", "profile", "inspect"), args[0]);
         }
 
         if (args.length == 2 && args[0].equalsIgnoreCase("create")) {

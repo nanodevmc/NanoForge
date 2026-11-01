@@ -122,6 +122,14 @@ public final class BukkitBinding {
                 Object val = nwe.get(prop);
                 if (val != null) return val;
             }
+            if (target instanceof ru.nanodev.nanoforge.event.NanoNetworkEvent) {
+                ru.nanodev.nanoforge.event.NanoNetworkEvent nne = (ru.nanodev.nanoforge.event.NanoNetworkEvent) target;
+                if ("sender".equals(p) || "sender_server".equals(p) || "server".equals(p)) return nne.getSenderServer();
+                if ("action".equals(p)) return nne.getAction();
+                if ("payload".equals(p)) return nne.getPayload();
+                Object val = nne.get(prop);
+                if (val != null) return val;
+            }
         }
 
         // Свойства пустой руки (AIR)

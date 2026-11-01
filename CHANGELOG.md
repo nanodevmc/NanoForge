@@ -643,6 +643,25 @@ warnedMissing`) и один и тот же метод "проверить, ус�
 ### Фиксы
 Исправлен баг, из-за которого `{maxplayers}` / `{MAXPLAYERS}` и `{online}` / `{online_players}` не подставлялись.
 
+## 1.9.3
+
+### ⚡ 4 Ключевых модуля: NanoJIT, NanoMesh, NanoDungeon, NanoLens
+- **NanoJIT (Runtime Just-In-Time Compiler):**
+  - Адаптивная JIT-компиляция горячих участков формул NanoScript (Hot-Paths > 20 вызовов) в прямые скомпилированные функции.
+  - Zero-allocation в бою, прямой доступ к полям и методам, максимальная скорость выполнения на уровне нативного Java-кода.
+- **NanoMesh (Cross-Server Sync & Cluster Bus):**
+  - Поддержка межсерверной синхронизации через Velocity/BungeeCord Plugin Messaging (`nanoforge:cluster`) и нативный легковесный сокет Redis.
+  - Глобальные переменные аддонов (`setvar: key, value, scope: network`), кросс-серверные оповещения `network_broadcast:` и события `network_event:`.
+  - Bukkit-событие `NanoNetworkEvent` с триггером `trigger: network`.
+- **NanoDungeon (Procedural Instances & Auto-Mines):**
+  - Движок процедурных данжей, шахт и арен на базе нативного Bukkit `StructureManager` (`.nbt`) и процедурных кубов.
+  - Автоматическая фиксация и откат замененных блоков (`restore()`) по истечении таймера инстанса.
+  - Действия: `dungeon_spawn: id, template, duration`, `dungeon_reset: id`, `dungeon_clear: id`.
+- **NanoLens (HUD Debugger, Hot-Swap & Profiler):**
+  - Фоновый демон `AddonFileWatcher` на Java `WatchService`: мгновенная горячая перезагрузка аддона при сохранении файла без команды `/nano reload`.
+  - Высокоточный профайлер нагрузки аддонов в микросекундах (`/nano profile`).
+  - Режим инспектора векторов и лучей рейтрейсинга (`/nano inspect`).
+
 ## 1.9.2
 
 ### ⚡ 5 Новых флагманских модулей: Raytracing, Webhook Server, PDC Engine, Cross-Addon Bus, Holograms
