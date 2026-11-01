@@ -107,6 +107,28 @@ public final class BukkitBinding {
             }
         }
 
+        // Свойства пустой руки (AIR)
+        if ("AIR".equals(target)) {
+            switch (p) {
+                case "type":
+                case "material":
+                    return "AIR";
+                case "amount":
+                case "custom_model_data":
+                case "cmd":
+                    return 0.0;
+                case "has_custom_model_data":
+                case "has_cmd":
+                case "has_display_name":
+                case "has_lore":
+                    return false;
+                case "display_name":
+                case "name":
+                    return "";
+                default: break;
+            }
+        }
+
         // Свойства ItemStack (предмет в руке)
         if (target instanceof org.bukkit.inventory.ItemStack) {
             org.bukkit.inventory.ItemStack item = (org.bukkit.inventory.ItemStack) target;
@@ -118,31 +140,51 @@ public final class BukkitBinding {
                     return (double) item.getAmount();
                 case "has_custom_model_data":
                 case "has_cmd": {
-                    if (!item.hasItemMeta()) return false;
-                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
-                    return meta != null && meta.hasCustomModelData();
+                    try {
+                        if (!item.hasItemMeta()) return false;
+                        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                        return meta != null && meta.hasCustomModelData();
+                    } catch (Throwable t) {
+                        return false;
+                    }
                 }
                 case "custom_model_data":
                 case "cmd": {
-                    if (!item.hasItemMeta()) return 0.0;
-                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
-                    return (meta != null && meta.hasCustomModelData()) ? (double) meta.getCustomModelData() : 0.0;
+                    try {
+                        if (!item.hasItemMeta()) return 0.0;
+                        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                        return (meta != null && meta.hasCustomModelData()) ? (double) meta.getCustomModelData() : 0.0;
+                    } catch (Throwable t) {
+                        return 0.0;
+                    }
                 }
                 case "display_name":
                 case "name": {
-                    if (!item.hasItemMeta()) return "";
-                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
-                    return (meta != null && meta.hasDisplayName()) ? meta.getDisplayName() : "";
+                    try {
+                        if (!item.hasItemMeta()) return "";
+                        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                        return (meta != null && meta.hasDisplayName()) ? meta.getDisplayName() : "";
+                    } catch (Throwable t) {
+                        return "";
+                    }
                 }
                 case "has_display_name": {
-                    if (!item.hasItemMeta()) return false;
-                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
-                    return meta != null && meta.hasDisplayName();
+                    try {
+                        if (!item.hasItemMeta()) return false;
+                        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                        return meta != null && meta.hasDisplayName();
+                    } catch (Throwable t) {
+                        return false;
+                    }
                 }
                 case "has_lore": {
-                    if (!item.hasItemMeta()) return false;
-                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
-                    return meta != null && meta.hasLore() && meta.getLore() != null && !meta.getLore().isEmpty();
+                    try {
+                        if (!item.hasItemMeta()) return false;
+                        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                        return meta != null && meta.hasLore() && meta.getLore() != null && !meta.getLore().isEmpty();
+                    } catch (Throwable t) {
+                        return false;
+                    }
                 }
                 default: break;
             }
@@ -313,9 +355,9 @@ public final class BukkitBinding {
         }
     }
 
-    private static org.bukkit.inventory.ItemStack getItemOrAir(org.bukkit.inventory.ItemStack item) {
-        if (item == null || item.getType() == org.bukkit.Material.AIR) {
-            return new org.bukkit.inventory.ItemStack(org.bukkit.Material.AIR);
+    private static Object getItemOrAir(org.bukkit.inventory.ItemStack item) {
+        if (item == null) {
+            return "AIR";
         }
         return item;
     }
