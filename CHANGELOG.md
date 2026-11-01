@@ -643,6 +643,26 @@ warnedMissing`) и один и тот же метод "проверить, ус�
 ### Фиксы
 Исправлен баг, из-за которого `{maxplayers}` / `{MAXPLAYERS}` и `{online}` / `{online_players}` не подставлялись.
 
+## 1.9.2
+
+### ⚡ 5 Новых флагманских модулей: Raytracing, Webhook Server, PDC Engine, Cross-Addon Bus, Holograms
+- **Visual Raytracing & Projectiles (`raytrace:`):**
+  - Трассировка лучей в реальном времени с Bukkit RayTrace и частицами (`raytrace: 25 CRIT 0.5`).
+  - Поддержка вложенных действий `on_hit` (с передачей жертвы) и `on_hit_block` для создания магии, оружия и лазеров без Java.
+- **Embedded Webhook & REST API Server (`/api/v1/webhook`):**
+  - Автономный микросервер на порту `8085` без внешних библиотек (Java `HttpServer`).
+  - Bearer токен авторизация, парсинг JSON payload, виртуальное событие `NanoWebhookEvent`.
+- **PersistentDataContainer (PDC) & NBT Engine:**
+  - Прямое чтение PDC сущностей и предметов в руке через `pdc('key')` и `target.pdc('key')`.
+  - Запись PDC данных через действие `pdc: target, key, value` (автодетекция string/int/double).
+- **Cross-Addon Event Bus (`trigger_event:` / `fire_event`):**
+  - Межаддонная шина событий через `NanoCustomEvent`.
+  - Генерация событий из действий или формул (`trigger_event: boss_defeat`).
+  - Прослушивание кастомных событий в YAML через `trigger: custom` или `trigger: NanoCustomEvent`.
+- **Floating Holograms & Damage Displays (`hologram:`):**
+  - Легковесные парящие голограммы и индикаторы урона на базе маркеров ArmorStand без сторонних плагинов (1.16-1.21.x).
+  - Настройка времени жизни (`2s`, `40t`), смещения (`offset_y`) и плавного подъёма (`velocity_y`).
+
 ## 1.9.1
 
 ### NanoScript Supercharged & Clean Actions

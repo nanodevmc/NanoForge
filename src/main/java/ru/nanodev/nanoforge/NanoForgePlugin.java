@@ -67,6 +67,12 @@ public class NanoForgePlugin extends JavaPlugin {
 
         getLogger().info(ru.nanodev.nanoforge.util.Messages.get("plugin.enabled-log", "count", addonManager.getAddons().size()));
 
+        if (getConfig().getBoolean("webhook-server.enabled", false)) {
+            int port = getConfig().getInt("webhook-server.port", 8085);
+            String token = getConfig().getString("webhook-server.secret-token", "");
+            ru.nanodev.nanoforge.webhook.WebhookServer.start(port, token);
+        }
+
         if (getConfig().getBoolean("update-checker.enabled", true)) {
             boolean notifyConsole = getConfig().getBoolean("update-checker.notify-console", true);
             UpdateChecker.checkAsync(this, result -> {
@@ -108,6 +114,7 @@ public class NanoForgePlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        ru.nanodev.nanoforge.webhook.WebhookServer.stop();
         if (addonManager != null) {
             addonManager.disableAll();
         }

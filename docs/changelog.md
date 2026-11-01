@@ -2,14 +2,25 @@
 
 <div align="center">
 
-<img src="https://img.shields.io/badge/Версия-v1.9.1-00FF9C?style=for-the-badge&logoColor=black" alt="Version 1.9.0"/>
+<img src="https://img.shields.io/badge/Версия-v1.9.2-00FF9C?style=for-the-badge&logoColor=black" alt="Version 1.9.2"/>
 <img src="https://img.shields.io/badge/Статус-Release-2c5364?style=for-the-badge" alt="Status"/>
 
 </div>
 
 ---
 
-## ⚡ Версия 1.9.1 *(Текущая)*
+## ⚡ Версия 1.9.2 *(Текущая)*
+
+### 🚀 5 Флагманских модулей: Raytracing, Webhook Server, PDC Engine, Event Bus, Holograms
+* **Визуальная трассировка лучей и снаряды (`raytrace:`):** лазеры, заклинания и пушки с партиклами и колбэками `on_hit` и `on_hit_block`.
+* **Встроенный Webhook & REST API Сервер:** порт `8085`, Bearer auth, приём внешних вебхуков в Bukkit-события `NanoWebhookEvent` для донат-сайтов, ботов и мониторинга.
+* **PersistentDataContainer (PDC) & NBT:** чтение в NanoScript (`pdc('mana')`, `player.pdc('class')`) и запись экшеном `pdc: player, mana, 100` / `pdc: item, rarity, legendary`.
+* **Межаддонная шина событий (`trigger_event:` / `NanoCustomEvent`):** общение между аддонами без прямой связанности.
+* **Всплывающий урон и голограммы (`hologram:`):** парящий текст и индикаторы урона (`hologram: victim, &c-50 HP, 2s, 0.05`) без HolographicDisplays / DecentHolograms.
+
+---
+
+## ⚡ Версия 1.9.1
 
 ### 🚀 NanoScript Supercharged & Clean Actions
 * **Лаконичный позиционный синтаксис экшенов:**

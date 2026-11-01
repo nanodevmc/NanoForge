@@ -20,5 +20,12 @@ update-checker:
 # Если false — аддоны работают в памяти NanoForge, но в общем списке плагинов сервера не видны.
 register-addons-as-plugins: true
 
+# Встроенный легковесный Webhook & REST API Server.
+# Позволяет сайтам автодоната и внешним скриптам вызывать события в игре (trigger: WEBHOOK_RECEIVED).
+webhook-server:
+  enabled: false
+  port: 8085
+  secret-token: "nano-secret-token"
+
 # by t.me/NanoDev_mc
 

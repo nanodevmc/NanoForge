@@ -1,5 +1,14 @@
 # BUILD_LOG
 
+## [2026-11-01] Версия 1.9.2 — Raytracing, Webhook Server, PDC Engine, Event Bus, Holograms
+- **Что сделано:**
+  - Высокопроизводительный движок визуального рейтрейсинга и снарядов (`raytrace:`) с частицами и колбэками `on_hit` (с передачей жертвы) и `on_hit_block`.
+  - Встроенный Webhook & REST API сервер на стандартном Java `HttpServer` (порт 8085, Bearer-аутентификация, виртуальное событие `NanoWebhookEvent`).
+  - PersistentDataContainer (PDC) & NBT движок: быстрое чтение через `pdc('key')` и `target.pdc('key')`, запись экшеном `pdc: target, key, value`.
+  - Межаддонная шина событий `NanoCustomEvent` с экшеном `trigger_event:` / `fire_event` и поддержкой прослушивания в триггерах аддонов (`trigger: custom`).
+  - Легковесные парящие голограммы и индикаторы урона (`hologram:`) на базе маркеров ArmorStand без внешних зависимостей (1.16-1.21.x).
+  - 100% покрытие новыми unit-тестами `NanoForge192FeaturesTest`.
+
 ## [2026-11-01] Версия 1.9.1 — NanoScript Supercharged & Clean Actions
 - **Что сделано:**
   - Лаконичный позиционный синтаксис для sound, particle, effect без многословного key = val.

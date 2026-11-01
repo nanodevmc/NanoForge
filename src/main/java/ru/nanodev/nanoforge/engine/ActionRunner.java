@@ -538,6 +538,77 @@ public class ActionRunner {
                         }
                         break;
                     }
+                    case "raytrace": {
+                        ru.nanodev.nanoforge.raytrace.RaytraceRunner.execute(action, player, resolveTargetEntity(action, player, event), currentAddon, commandArgs);
+                        break;
+                    }
+                    case "hologram": {
+                        org.bukkit.entity.Entity holoTarget = resolveTargetEntity(action, player, event);
+                        if (holoTarget == null && player != null) holoTarget = player;
+                        String rawText = String.valueOf(action.getOrDefault("text", ""));
+                        String text = withResult(colorize(PlaceholderUtil.apply(rawText, player, commandArgs)), lastCallResult[0]);
+                        long durationTicks = parseDurationTicks(action.get("duration"), 40L);
+                        double offsetY = ru.nanodev.nanoforge.util.NumberUtil.toDouble(action.get("offset_y"), 0.5);
+                        double velocityY = ru.nanodev.nanoforge.util.NumberUtil.toDouble(action.get("velocity_y"), 0.03);
+                        ru.nanodev.nanoforge.hologram.HologramManager.spawn(
+                                ru.nanodev.nanoforge.NanoForgePlugin.get(),
+                                holoTarget,
+                                null,
+                                text,
+                                durationTicks,
+                                offsetY,
+                                velocityY
+                        );
+                        break;
+                    }
+                    case "trigger_event":
+                    case "fire_event": {
+                        String evName = String.valueOf(action.getOrDefault("event", action.getOrDefault("name", "")));
+                        if (!evName.isEmpty()) {
+                            java.util.Map<String, Object> data = new java.util.HashMap<>();
+                            Object dataObj = action.get("data");
+                            if (dataObj instanceof java.util.Map) {
+                                for (java.util.Map.Entry<?, ?> e : ((java.util.Map<?, ?>) dataObj).entrySet()) {
+                                    data.put(String.valueOf(e.getKey()), e.getValue());
+                                }
+                            }
+                            if (player != null) {
+                                data.putIfAbsent("player", player.getName());
+                                data.putIfAbsent("uuid", player.getUniqueId().toString());
+                            }
+                            ru.nanodev.nanoforge.bus.NanoCustomEvent.fire(evName, data);
+                        }
+                        break;
+                    }
+                    case "pdc":
+                    case "set_pdc": {
+                        String targetType = String.valueOf(action.getOrDefault("target", "player")).toLowerCase();
+                        String key = String.valueOf(action.getOrDefault("key", ""));
+                        Object val = action.get("value");
+                        if (!key.isEmpty() && val != null) {
+                            val = PlaceholderUtil.apply(String.valueOf(val), player, commandArgs);
+                            org.bukkit.NamespacedKey nKey = new org.bukkit.NamespacedKey(ru.nanodev.nanoforge.NanoForgePlugin.get(), key.toLowerCase());
+                            if ("item".equals(targetType) || "hand".equals(targetType) || "main_hand".equals(targetType)) {
+                                if (player != null) {
+                                    org.bukkit.inventory.ItemStack item = player.getInventory().getItemInMainHand();
+                                    if (item != null && item.getType() != org.bukkit.Material.AIR) {
+                                        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                                        if (meta != null) {
+                                            setPdcData(meta.getPersistentDataContainer(), nKey, val);
+                                            item.setItemMeta(meta);
+                                        }
+                                    }
+                                }
+                            } else {
+                                org.bukkit.entity.Entity ent = resolveTargetEntity(action, player, event);
+                                if (ent == null && player != null) ent = player;
+                                if (ent != null) {
+                                    setPdcData(ent.getPersistentDataContainer(), nKey, val);
+                                }
+                            }
+                        }
+                        break;
+                    }
                     default:
                         Bukkit.getLogger().warning(ru.nanodev.nanoforge.util.Messages.get("engine.unknown-action-type", "type", type));
                 }
@@ -642,6 +713,61 @@ public class ActionRunner {
         return null;
     }
 
+    public static long parseDurationTicks(Object durRaw, long defaultTicks) {
+        if (durRaw == null) return defaultTicks;
+        String durStr = String.valueOf(durRaw).trim().toLowerCase();
+        if (durStr.endsWith("ms")) {
+            return Math.max(1L, (long) (ru.nanodev.nanoforge.util.NumberUtil.toDouble(durStr.substring(0, durStr.length() - 2), 50) / 50.0));
+        } else if (durStr.endsWith("s")) {
+            return (long) (ru.nanodev.nanoforge.util.NumberUtil.toDouble(durStr.substring(0, durStr.length() - 1), 1) * 20.0);
+        } else if (durStr.endsWith("m")) {
+            return (long) (ru.nanodev.nanoforge.util.NumberUtil.toDouble(durStr.substring(0, durStr.length() - 1), 1) * 1200.0);
+        } else if (durStr.endsWith("h")) {
+            return (long) (ru.nanodev.nanoforge.util.NumberUtil.toDouble(durStr.substring(0, durStr.length() - 1), 1) * 72000.0);
+        } else if (durStr.endsWith("t")) {
+            return (long) ru.nanodev.nanoforge.util.NumberUtil.toDouble(durStr.substring(0, durStr.length() - 1), defaultTicks);
+        } else {
+            return (long) ru.nanodev.nanoforge.util.NumberUtil.toDouble(durRaw, defaultTicks);
+        }
+    }
+
+    private static org.bukkit.entity.Entity resolveTargetEntity(Map<String, Object> action, Player defaultPlayer, Event event) {
+        if (action != null && action.containsKey("target")) {
+            String t = String.valueOf(action.get("target")).trim().toLowerCase();
+            if ("attacker".equals(t) && event instanceof org.bukkit.event.entity.EntityDamageByEntityEvent) {
+                org.bukkit.entity.Entity d = ((org.bukkit.event.entity.EntityDamageByEntityEvent) event).getDamager();
+                if (d instanceof org.bukkit.entity.Projectile) {
+                    org.bukkit.projectiles.ProjectileSource s = ((org.bukkit.entity.Projectile) d).getShooter();
+                    if (s instanceof org.bukkit.entity.Entity) return (org.bukkit.entity.Entity) s;
+                }
+                return d;
+            } else if ("victim".equals(t) && event instanceof org.bukkit.event.entity.EntityDamageEvent) {
+                return ((org.bukkit.event.entity.EntityDamageEvent) event).getEntity();
+            }
+        }
+        return defaultPlayer;
+    }
+
+    private static void setPdcData(org.bukkit.persistence.PersistentDataContainer pdc, org.bukkit.NamespacedKey key, Object val) {
+        if (pdc == null || key == null || val == null) return;
+        String str = String.valueOf(val);
+        try {
+            if (str.equalsIgnoreCase("true") || str.equalsIgnoreCase("false")) {
+                pdc.set(key, org.bukkit.persistence.PersistentDataType.STRING, str);
+            } else if (str.matches("-?\\d+")) {
+                pdc.set(key, org.bukkit.persistence.PersistentDataType.INTEGER, Integer.parseInt(str));
+            } else if (str.matches("-?\\d+\\.\\d+")) {
+                pdc.set(key, org.bukkit.persistence.PersistentDataType.DOUBLE, Double.parseDouble(str));
+            } else {
+                pdc.set(key, org.bukkit.persistence.PersistentDataType.STRING, str);
+            }
+        } catch (Throwable ignored) {
+            try {
+                pdc.set(key, org.bukkit.persistence.PersistentDataType.STRING, str);
+            } catch (Throwable ignored2) {}
+        }
+    }
+
     private static Player resolveTargetPlayer(Map<String, Object> action, Player defaultPlayer, Event event) {
         if (action != null && action.containsKey("target")) {
             String t = String.valueOf(action.get("target")).trim().toLowerCase();
@@ -716,6 +842,64 @@ public class ActionRunner {
         if ("script".equals(type)) {
             map.put("type", "script");
             map.put("code", stripQuotes(rest));
+            return map;
+        }
+
+        if ("raytrace".equals(type)) {
+            map.put("type", "raytrace");
+            if (!rest.contains("=") && !rest.contains(",")) {
+                String[] tokens = rest.split("\\s+");
+                if (tokens.length >= 1) map.put("distance", tokens[0]);
+                if (tokens.length >= 2) map.put("particle", tokens[1]);
+                if (tokens.length >= 3) map.put("step", tokens[2]);
+                return map;
+            }
+        }
+
+        if ("hologram".equals(type)) {
+            map.put("type", "hologram");
+            if (rest.contains(",")) {
+                String[] parts = rest.split(",", 4);
+                if (parts.length >= 2) {
+                    String first = parts[0].trim();
+                    if ("attacker".equalsIgnoreCase(first) || "victim".equalsIgnoreCase(first) || "player".equalsIgnoreCase(first)) {
+                        map.put("target", first.toLowerCase());
+                        map.put("text", stripQuotes(parts[1].trim()));
+                        if (parts.length >= 3) map.put("duration", parts[2].trim());
+                        if (parts.length >= 4) map.put("velocity_y", parts[3].trim());
+                    } else {
+                        map.put("text", stripQuotes(parts[0].trim()));
+                        map.put("duration", parts[1].trim());
+                        if (parts.length >= 3) map.put("offset_y", parts[2].trim());
+                        if (parts.length >= 4) map.put("velocity_y", parts[3].trim());
+                    }
+                } else {
+                    map.put("text", stripQuotes(parts[0].trim()));
+                }
+                return map;
+            } else {
+                map.put("text", stripQuotes(rest));
+                return map;
+            }
+        }
+
+        if ("trigger_event".equals(type) || "fire_event".equals(type)) {
+            map.put("type", "trigger_event");
+            map.put("event", stripQuotes(rest));
+            return map;
+        }
+
+        if ("pdc".equals(type) || "set_pdc".equals(type)) {
+            map.put("type", "pdc");
+            String[] parts = rest.split(",", 3);
+            if (parts.length == 3) {
+                map.put("target", parts[0].trim());
+                map.put("key", parts[1].trim());
+                map.put("value", stripQuotes(parts[2].trim()));
+            } else if (parts.length == 2) {
+                map.put("key", parts[0].trim());
+                map.put("value", stripQuotes(parts[1].trim()));
+            }
             return map;
         }
 

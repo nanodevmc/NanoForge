@@ -95,7 +95,12 @@ public final class BukkitBinding {
         // Свойства Event
         if (target instanceof Event) {
             Event ev = (Event) target;
-            if ("name".equals(p)) return ev.getEventName();
+            if ("name".equals(p)) {
+                if (target instanceof ru.nanodev.nanoforge.bus.NanoCustomEvent) {
+                    return ((ru.nanodev.nanoforge.bus.NanoCustomEvent) target).getName();
+                }
+                return ev.getEventName();
+            }
             if ("cancelled".equals(p) || "is_cancelled".equals(p)) {
                 return ev instanceof Cancellable && ((Cancellable) ev).isCancelled();
             }
@@ -104,6 +109,18 @@ public final class BukkitBinding {
                 if ("damage".equals(p)) return ede.getDamage();
                 if ("final_damage".equals(p)) return ede.getFinalDamage();
                 if ("cause".equals(p)) return ede.getCause().name();
+            }
+            if (target instanceof ru.nanodev.nanoforge.bus.NanoCustomEvent) {
+                ru.nanodev.nanoforge.bus.NanoCustomEvent nce = (ru.nanodev.nanoforge.bus.NanoCustomEvent) target;
+                if ("event_name".equals(p)) return nce.getName();
+                Object val = nce.get(prop);
+                if (val != null) return val;
+            }
+            if (target instanceof ru.nanodev.nanoforge.event.NanoWebhookEvent) {
+                ru.nanodev.nanoforge.event.NanoWebhookEvent nwe = (ru.nanodev.nanoforge.event.NanoWebhookEvent) target;
+                if ("payload".equals(p)) return nwe.getPayload();
+                Object val = nwe.get(prop);
+                if (val != null) return val;
             }
         }
 
@@ -223,6 +240,16 @@ public final class BukkitBinding {
             if ("distance_to".equals(m) && args.length >= 1 && args[0] instanceof Entity) {
                 return e.getLocation().distance(((Entity) args[0]).getLocation());
             }
+            if ("pdc".equals(m) && args.length >= 1) {
+                return getPdcValue(e, String.valueOf(args[0]));
+            }
+        }
+
+        if (target instanceof org.bukkit.inventory.ItemStack) {
+            org.bukkit.inventory.ItemStack is = (org.bukkit.inventory.ItemStack) target;
+            if ("pdc".equals(m) && args.length >= 1) {
+                return getItemPdcValue(is, String.valueOf(args[0]));
+            }
         }
 
         return null;
@@ -339,6 +366,28 @@ public final class BukkitBinding {
                 }
                 return false;
             }
+            case "pdc": {
+                if (args.length >= 2 && args[0] instanceof Entity) {
+                    return getPdcValue((Entity) args[0], String.valueOf(args[1]));
+                }
+                if (args.length >= 1 && ctx != null && ctx.getPlayer() != null) {
+                    return getPdcValue(ctx.getPlayer(), String.valueOf(args[0]));
+                }
+                return null;
+            }
+            case "trigger_event":
+            case "fire_event": {
+                if (args.length >= 1) {
+                    String evName = String.valueOf(args[0]);
+                    java.util.Map<String, Object> data = new java.util.HashMap<>();
+                    if (args.length >= 2 && args[1] instanceof java.util.Map) {
+                        data.putAll((java.util.Map<String, Object>) args[1]);
+                    }
+                    ru.nanodev.nanoforge.bus.NanoCustomEvent.fire(evName, data);
+                    return true;
+                }
+                return false;
+            }
             default:
                 return null;
         }
@@ -374,5 +423,41 @@ public final class BukkitBinding {
             }
         }
         return false;
+    }
+
+    public static Object getPdcValue(Entity entity, String key) {
+        if (entity == null || key == null) return null;
+        try {
+            org.bukkit.NamespacedKey nKey = new org.bukkit.NamespacedKey(ru.nanodev.nanoforge.NanoForgePlugin.get(), key.toLowerCase());
+            org.bukkit.persistence.PersistentDataContainer pdc = entity.getPersistentDataContainer();
+            if (pdc.has(nKey, org.bukkit.persistence.PersistentDataType.STRING)) {
+                return pdc.get(nKey, org.bukkit.persistence.PersistentDataType.STRING);
+            }
+            if (pdc.has(nKey, org.bukkit.persistence.PersistentDataType.DOUBLE)) {
+                return pdc.get(nKey, org.bukkit.persistence.PersistentDataType.DOUBLE);
+            }
+            if (pdc.has(nKey, org.bukkit.persistence.PersistentDataType.INTEGER)) {
+                return (double) pdc.get(nKey, org.bukkit.persistence.PersistentDataType.INTEGER);
+            }
+        } catch (Throwable ignored) {}
+        return null;
+    }
+
+    public static Object getItemPdcValue(org.bukkit.inventory.ItemStack item, String key) {
+        if (item == null || key == null || !item.hasItemMeta()) return null;
+        try {
+            org.bukkit.NamespacedKey nKey = new org.bukkit.NamespacedKey(ru.nanodev.nanoforge.NanoForgePlugin.get(), key.toLowerCase());
+            org.bukkit.persistence.PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+            if (pdc.has(nKey, org.bukkit.persistence.PersistentDataType.STRING)) {
+                return pdc.get(nKey, org.bukkit.persistence.PersistentDataType.STRING);
+            }
+            if (pdc.has(nKey, org.bukkit.persistence.PersistentDataType.DOUBLE)) {
+                return pdc.get(nKey, org.bukkit.persistence.PersistentDataType.DOUBLE);
+            }
+            if (pdc.has(nKey, org.bukkit.persistence.PersistentDataType.INTEGER)) {
+                return (double) pdc.get(nKey, org.bukkit.persistence.PersistentDataType.INTEGER);
+            }
+        } catch (Throwable ignored) {}
+        return null;
     }
 }

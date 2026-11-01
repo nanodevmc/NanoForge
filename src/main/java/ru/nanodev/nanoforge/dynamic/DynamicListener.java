@@ -31,7 +31,9 @@ public class DynamicListener implements Listener {
             "org.bukkit.event.server.",
             "org.bukkit.event.weather.",
             "org.bukkit.event.vehicle.",
-            "org.bukkit.event.hanging."
+            "org.bukkit.event.hanging.",
+            "ru.nanodev.nanoforge.bus.",
+            "ru.nanodev.nanoforge.event."
     };
 
     private final NanoForgePlugin plugin;
@@ -83,6 +85,13 @@ public class DynamicListener implements Listener {
     @SuppressWarnings("unchecked")
     public static Class<? extends Event> resolveEventClass(String name) {
         if (name == null) return null;
+        String rawTrimmed = name.trim();
+        if ("custom".equalsIgnoreCase(rawTrimmed) || "nanocustom".equalsIgnoreCase(rawTrimmed) || "nanocustomevent".equalsIgnoreCase(rawTrimmed)) {
+            return ru.nanodev.nanoforge.bus.NanoCustomEvent.class;
+        }
+        if ("webhook".equalsIgnoreCase(rawTrimmed) || "nanowebhook".equalsIgnoreCase(rawTrimmed) || "nanowebhookevent".equalsIgnoreCase(rawTrimmed) || "webhook_received".equalsIgnoreCase(rawTrimmed)) {
+            return ru.nanodev.nanoforge.event.NanoWebhookEvent.class;
+        }
         if (name.contains(".")) {
             try {
                 return (Class<? extends Event>) Class.forName(name);

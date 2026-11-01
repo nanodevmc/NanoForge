@@ -6,7 +6,7 @@
 - **Модель аддонов:** YAML (`addon.yml`) -> динамическая регистрация в Bukkit `CommandMap`, `HandlerList` и виртуальный `PluginBase` в `SimplePluginManager`.
 - **Хранилище:** `storage.yml` (персистентные переменные и кулдауны), `backups/` (автобэкапы).
 
-## Текущая версия: 1.9.1
+## Текущая версия: 1.9.2
 ### Реализовано в 1.9.0:
 1. **NanoScript (Zero-Allocation Expression Engine & Micro-VM):** Встроенный легковесный интерпретатор/стековая микро-VM с Pratt-парсером, Constant Folding (`5 + 5 * 2 -> 15`), стековыми инструкциями (`int[]`), пулом фреймов через `ThreadLocal` (0 байт мусора на куче в тике) и Fast-Path Bukkit Binding (`health`, `balance`, `chance`, `has_perm`, `event.damage`). Интегрирован в `condition:`, `if: { script: ... }`, сокращённый синтаксис actions (`heal: attacker, amount = event.damage * 0.35`), плейсхолдеры `{event.damage * 0.35}` и команду `/nano script <test|eval|disasm>`.
 2. **YAML-to-JAR компилятор (`/nano compile <аддон> [версия]`):** Автономная компиляция аддона/мини-плагина в полноценный `.jar` с манифестом, `plugin.yml` и встроенным Bootstrapper. Автоматически добавляет `depend: [<плагин>]` в `plugin.yml` при сборке аддона.
