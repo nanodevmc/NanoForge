@@ -253,7 +253,11 @@ public final class NanoLexer {
     }
 
     private static boolean isIdentStart(char c) {
-        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+        return isAlpha(c) || c == '_';
+    }
+
+    private static boolean isAlpha(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
 
     private static boolean isIdentPart(char c) {

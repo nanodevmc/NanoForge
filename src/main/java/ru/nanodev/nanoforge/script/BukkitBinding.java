@@ -279,9 +279,13 @@ public final class BukkitBinding {
                 // cooldown('name', 3.5s)
                 if (args.length >= 2 && ctx != null && ctx.getPlayer() != null && ctx.getAddon() != null && ctx.getAddon().getStorage() != null) {
                     String cdKey = String.valueOf(args[0]);
-                    double sec = toDouble(args[1]);
-                    long durationMillis = (long) (sec * 1000L);
-                    return ctx.getAddon().getStorage().checkAndUpdateCooldown(ctx.getPlayer(), cdKey, durationMillis);
+                    long sec = (long) Math.ceil(toDouble(args[1]));
+                    long remaining = ctx.getAddon().getStorage().remainingCooldownSeconds(ctx.getPlayer(), cdKey, sec);
+                    if (remaining <= 0) {
+                        ctx.getAddon().getStorage().markCooldown(ctx.getPlayer(), cdKey);
+                        return true;
+                    }
+                    return false;
                 }
                 return true;
             }
