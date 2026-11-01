@@ -9,14 +9,14 @@
 <p align="center">✧･ﾟ: *✧･ﾟ:* 　　*:･ﾟ✧*:･ﾟ✧</p>
 
 <p align="center">
-  ➳ 📖 <b>Онлайн-документация:</b> <a href="https://nanodev1488.github.io/NanoForge/">nanodev1488.github.io/NanoForge</a><br/>
+  ➳ 📖 <b>Онлайн-документация:</b> <a href="https://nanodevmc.github.io/NanoForge/">nanodevmc.github.io/NanoForge</a><br/>
   ➳ 📡 Телеграм-канал автора: <a href="https://t.me/nanodev_MC">t.me/nanodev_MC</a><br/>
   ➳ ⚡ Без компиляции, без перезагрузки сервера, прямо в YAML и через игру!<br/>
   ➳ 🛡️ Не мод Forge! Серверный плагин Spigot / Paper / Purpur.
 </p>
 
 <p align="center">
-  <a href="https://nanodev1488.github.io/NanoForge/"><img src="https://img.shields.io/badge/Docs-GitHub%20Pages-00FF9C?style=for-the-badge&logo=gitbook&logoColor=black" alt="Documentation"/></a>
+  <a href="https://nanodevmc.github.io/NanoForge/"><img src="https://img.shields.io/badge/Docs-GitHub%20Pages-00FF9C?style=for-the-badge&logo=gitbook&logoColor=black" alt="Documentation"/></a>
   <img src="https://img.shields.io/badge/Minecraft-1.16--1.21.x-2c5364?style=for-the-badge&logo=minecraft&logoColor=white" alt="Minecraft"/>
   <img src="https://img.shields.io/badge/Platform-Paper%20%7C%20Spigot%20%7C%20Purpur-2c5364?style=for-the-badge" alt="Platform"/>
   <img src="https://img.shields.io/badge/Java-8%20--%2021%2B-2c5364?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java"/>
@@ -33,7 +33,7 @@
 
 <p align="center">▄︻デ══━一 ▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄ 一━══デ︻▄</p>
 
-> 📖 **[Открыть полную документацию с живым поиском и примерами](https://nanodev1488.github.io/NanoForge/)**  
+> 📖 **[Открыть полную документацию с живым поиском и примерами](https://nanodevmc.github.io/NanoForge/)**  
 > ⚠️ **Важно:** NanoForge — это **НЕ** загрузчик модов Forge, а серверный плагин для Spigot / Paper / Purpur 1.16 – 1.21.x! Игрокам на клиенты ничего устанавливать не нужно.
 
 Фреймворк-плагин для Bukkit/Spigot/Paper **1.16 – 1.21.x**, который позволяет
@@ -135,7 +135,7 @@ mvn clean package
 | `/nano validate` | без имени аддона — аудит СРАЗУ всех аддонов (короткая сводка ошибок/предупреждений на каждый) |
 | `/nano diff <аддон>` | что изменится на диске при следующем `/nano reload` — сравнение памяти с текущим addon.yml (полезно после ручной правки файла) |
 | `/nano debug <аддон>` | вкл/выкл verbose-лог: каждый выполненный action этого аддона пишется в консоль с типом и итогом |
-| `/nano update` | проверить GitHub (`NanoDev1488/NanoForge`) на новую версию прямо сейчас и скачать её — применится сама при следующем рестарте сервера |
+| `/nano update` | проверить GitHub (`nanodevmc/NanoForge`) на новую версию прямо сейчас и скачать её — применится сама при следующем рестарте сервера |
 | `/nano wizard` | GUI-мастер создания аддона: тип → (список включённых плагинов, постранично) → имя в чат → создание. Переиспользует ту же логику, что и `/nano create` |
 
 Алиасы: `/nanoforge`, `/nd`. Право на управление — `nano.admin` (по
@@ -414,7 +414,7 @@ menus:
 ## Автообновление
 
 При каждом старте сервера NanoForge асинхронно (не блокируя основной поток)
-проверяет GitHub Releases репозитория [`NanoDev1488/NanoForge`](https://github.com/NanoDev1488/NanoForge/releases/latest).
+проверяет GitHub Releases репозитория [`nanodevmc/NanoForge`](https://github.com/nanodevmc/NanoForge/releases/latest).
 Если там выложена версия новее текущей — jar автоматически скачивается в
 `plugins/update/NanoForge.jar`.
 
@@ -651,7 +651,7 @@ mvn clean verify  # тесты + сборка
 
 <p align="center">
   <b>Разработано с ❤️ от <a href="https://t.me/NanoDev_mc">NanoDev</a></b><br/>
-  Канал автора: <a href="https://t.me/NanoDev_mc">t.me/NanoDev_mc</a> • Документация: <a href="https://nanodev1488.github.io/NanoForge/">nanodev1488.github.io/NanoForge</a>
+  Канал автора: <a href="https://t.me/NanoDev_mc">t.me/NanoDev_mc</a> • Документация: <a href="https://nanodevmc.github.io/NanoForge/">nanodevmc.github.io/NanoForge</a>
 </p>
 
 <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=gradient&height=100&section=footer"/>

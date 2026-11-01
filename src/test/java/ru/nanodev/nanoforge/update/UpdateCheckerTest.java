@@ -17,7 +17,7 @@ class UpdateCheckerTest {
             + "  \"assets\": [\n"
             + "    {\n"
             + "      \"name\": \"NanoForge-1.6.1.jar\",\n"
-            + "      \"browser_download_url\": \"https://github.com/NanoDev1488/NanoForge/releases/download/v1.6.1/NanoForge-1.6.1.jar\"\n"
+            + "      \"browser_download_url\": \"https://github.com/nanodevmc/NanoForge/releases/download/v1.6.1/NanoForge-1.6.1.jar\"\n"
             + "    }\n"
             + "  ]\n"
             + "}";
@@ -36,7 +36,7 @@ class UpdateCheckerTest {
     @Test
     void extractsJarAssetUrl() {
         assertThat(UpdateChecker.extractJarAssetUrl(REAL_LIKE_RESPONSE))
-                .isEqualTo("https://github.com/NanoDev1488/NanoForge/releases/download/v1.6.1/NanoForge-1.6.1.jar");
+                .isEqualTo("https://github.com/nanodevmc/NanoForge/releases/download/v1.6.1/NanoForge-1.6.1.jar");
     }
 
     @Test

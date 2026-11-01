@@ -251,7 +251,7 @@ public class NanoCommand implements CommandExecutor, TabCompleter {
      */
     private boolean handleUpdate(CommandSender sender) {
         sender.sendMessage(ChatColor.YELLOW + "➤ " + f(m("command.update.checking"))
-                + " " + ChatColor.GRAY + "(NanoDev1488/NanoForge)");
+                + " " + ChatColor.GRAY + "(nanodevmc/NanoForge)");
         plugin.checkForUpdates(result ->
                 Bukkit.getScheduler().runTask(plugin, () ->
                         sender.sendMessage(ChatColor.GOLD + "★ " + f(m("command.update.result")) + " " + ChatColor.GRAY + result)));

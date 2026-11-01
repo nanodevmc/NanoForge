@@ -569,7 +569,7 @@ warnedMissing`) и один и тот же метод "проверить, ус�
 
 ### Автообновление с GitHub (главная фича версии)
 `update/UpdateChecker` при каждом старте сервера (асинхронно, не блокируя
-основной поток) проверяет GitHub Releases репозитория `NanoDev1488/NanoForge`
+основной поток) проверяет GitHub Releases репозитория `nanodevmc/NanoForge`
 и, если там версия новее текущей, скачивает jar в `plugins/update/NanoForge.jar`.
 Это штатная папка Bukkit/Spigot/Paper — файл из неё сам подменит старый jar
 в `plugins/` при СЛЕДУЮЩЕМ запуске сервера, ДО загрузки любых плагинов.

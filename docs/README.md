@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <a href="https://nanodev1488.github.io/NanoForge/"><img src="https://img.shields.io/badge/Docs-GitHub%20Pages-00FF9C?style=for-the-badge&logo=gitbook&logoColor=black" alt="Documentation"/></a>
+  <a href="https://nanodevmc.github.io/NanoForge/"><img src="https://img.shields.io/badge/Docs-GitHub%20Pages-00FF9C?style=for-the-badge&logo=gitbook&logoColor=black" alt="Documentation"/></a>
   <img src="https://img.shields.io/badge/Minecraft-1.16--1.21.x-2c5364?style=for-the-badge&logo=minecraft&logoColor=white" alt="Minecraft"/>
   <img src="https://img.shields.io/badge/Platform-Paper%20%7C%20Spigot%20%7C%20Purpur-2c5364?style=for-the-badge" alt="Platform"/>
   <img src="https://img.shields.io/badge/Java-8%20--%2021%2B-2c5364?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java"/>

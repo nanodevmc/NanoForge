@@ -20,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Проверяет GitHub Releases репозитория NanoDev1488/NanoForge и, если там
+ * Проверяет GitHub Releases репозитория nanodevmc/NanoForge и, если там
  * версия новее текущей, скачивает jar в {@code plugins/update/NanoForge.jar} -
  * это ШТАТНЫЙ механизм Bukkit/Spigot/Paper (см. {@link Bukkit#getUpdateFolderFile()}):
  * при СЛЕДУЮЩЕМ старте сервера, ДО того как плагины вообще загружаются, файл
@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  */
 public class UpdateChecker {
 
-    private static final String API_URL = "https://api.github.com/repos/NanoDev1488/NanoForge/releases/latest";
+    private static final String API_URL = "https://api.github.com/repos/nanodevmc/NanoForge/releases/latest";
     private static final Pattern TAG_NAME = Pattern.compile("\"tag_name\"\\s*:\\s*\"([^\"]+)\"");
     private static final Pattern JAR_ASSET_URL = Pattern.compile("\"browser_download_url\"\\s*:\\s*\"([^\"]+\\.jar)\"");
 
@@ -79,7 +79,7 @@ public class UpdateChecker {
         String jarUrl = extractJarAssetUrl(json);
         if (jarUrl == null) {
             log.warning("[NanoForge] Доступна версия " + latestVersion + ", но в релизе нет .jar-файла для скачивания. "
-                    + "Скачай вручную: https://github.com/NanoDev1488/NanoForge/releases/latest");
+                    + "Скачай вручную: https://github.com/nanodevmc/NanoForge/releases/latest");
             return "Доступна версия " + latestVersion + ", но jar в релизе не найден - скачай вручную с GitHub.";
         }
 
