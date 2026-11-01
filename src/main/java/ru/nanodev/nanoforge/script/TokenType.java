@@ -32,6 +32,9 @@ public enum TokenType {
     RPAREN,         // )
     COMMA,          // ,
     DOT,            // .
+    QUESTION,       // ?
+    COLON,          // :
+    PIPE,           // |
 
     EOF
 }

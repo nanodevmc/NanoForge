@@ -148,4 +148,66 @@ class NanoScriptTest {
         assertThat(duration).isPositive();
         assertThat(avgNs).isGreaterThanOrEqualTo(0.0);
     }
+
+    @Test
+    @DisplayName("Тернарный оператор (cond ? a : b)")
+    void testTernaryOperator() {
+        assertThat(NanoScript.evalDouble("10 > 5 ? 100 : 200", null, null, null)).isEqualTo(100.0);
+        assertThat(NanoScript.evalDouble("10 < 5 ? 100 : 200", null, null, null)).isEqualTo(200.0);
+        assertThat(NanoScript.evalString("true ? 'Да' : 'Нет'", null, null, null)).isEqualTo("Да");
+        assertThat(NanoScript.evalString("false ? 'Да' : 'Нет'", null, null, null)).isEqualTo("Нет");
+    }
+
+    @Test
+    @DisplayName("Пайп-оператор (| func)")
+    void testPipeOperator() {
+        // 14.6 | round -> 15.0
+        assertThat(NanoScript.evalDouble("14.6 | round", null, null, null)).isEqualTo(15.0);
+        // 25 | sqrt -> 5.0
+        assertThat(NanoScript.evalDouble("25 | sqrt", null, null, null)).isEqualTo(5.0);
+        // 15 | clamp(0, 10) -> 10.0
+        assertThat(NanoScript.evalDouble("15 | clamp(0, 10)", null, null, null)).isEqualTo(10.0);
+        // чейнинг: 15.7 | round | clamp(0, 10) -> 10.0
+        assertThat(NanoScript.evalDouble("15.7 | round | clamp(0, 10)", null, null, null)).isEqualTo(10.0);
+    }
+
+    @Test
+    @DisplayName("Единицы времени (3s, 500ms, 2m, 1h, 20t)")
+    void testTimeUnits() {
+        assertThat(NanoScript.evalDouble("3s", null, null, null)).isEqualTo(3.0);
+        assertThat(NanoScript.evalDouble("500ms", null, null, null)).isEqualTo(0.5);
+        assertThat(NanoScript.evalDouble("2m", null, null, null)).isEqualTo(120.0);
+        assertThat(NanoScript.evalDouble("1h", null, null, null)).isEqualTo(3600.0);
+        assertThat(NanoScript.evalDouble("20t", null, null, null)).isEqualTo(1.0);
+    }
+
+    @Test
+    @DisplayName("Свойства предметов в руках и CustomModelData")
+    void testItemProperties() {
+        Player player = Mockito.mock(Player.class);
+        org.bukkit.inventory.PlayerInventory inv = Mockito.mock(org.bukkit.inventory.PlayerInventory.class);
+        org.bukkit.inventory.ItemStack sword = Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.bukkit.inventory.meta.ItemMeta meta = Mockito.mock(org.bukkit.inventory.meta.ItemMeta.class);
+
+        when(player.getInventory()).thenReturn(inv);
+        when(inv.getItemInMainHand()).thenReturn(sword);
+        when(sword.getType()).thenReturn(org.bukkit.Material.DIAMOND_SWORD);
+        when(sword.getAmount()).thenReturn(1);
+        when(sword.hasItemMeta()).thenReturn(true);
+        when(sword.getItemMeta()).thenReturn(meta);
+        when(meta.hasCustomModelData()).thenReturn(true);
+        when(meta.getCustomModelData()).thenReturn(1001);
+        when(meta.hasDisplayName()).thenReturn(true);
+        when(meta.getDisplayName()).thenReturn("§cМеч Крови");
+
+        assertThat(NanoScript.evalString("player.main_hand.type", player, null, null)).isEqualTo("DIAMOND_SWORD");
+        assertThat(NanoScript.evalDouble("player.main_hand.custom_model_data", player, null, null)).isEqualTo(1001.0);
+        assertThat(NanoScript.evalBoolean("player.main_hand.has_custom_model_data", player, null, null)).isTrue();
+        assertThat(NanoScript.evalString("player.main_hand.display_name", player, null, null)).isEqualTo("§cМеч Крови");
+
+        // Пустая вторая рука безопасно возвращает AIR без NPE
+        when(inv.getItemInOffHand()).thenReturn(null);
+        assertThat(NanoScript.evalString("player.off_hand.type", player, null, null)).isEqualTo("AIR");
+        assertThat(NanoScript.evalDouble("player.off_hand.custom_model_data", player, null, null)).isEqualTo(0.0);
+    }
 }

@@ -70,6 +70,8 @@ public final class NanoLexer {
                 case ')': tokens.add(Token.of(TokenType.RPAREN, start, 1)); break;
                 case ',': tokens.add(Token.of(TokenType.COMMA, start, 1)); break;
                 case '.': tokens.add(Token.of(TokenType.DOT, start, 1)); break;
+                case '?': tokens.add(Token.of(TokenType.QUESTION, start, 1)); break;
+                case ':': tokens.add(Token.of(TokenType.COLON, start, 1)); break;
                 case '=':
                     if (match('=')) {
                         tokens.add(Token.of(TokenType.EQ_EQ, start, 2));
@@ -110,7 +112,7 @@ public final class NanoLexer {
                     if (match('|')) {
                         tokens.add(Token.of(TokenType.PIPE_PIPE, start, 2));
                     } else {
-                        throw new IllegalArgumentException("Unexpected character '|' at index " + start + ". Did you mean '||'?");
+                        tokens.add(Token.of(TokenType.PIPE, start, 1));
                     }
                     break;
                 default:
@@ -139,10 +141,27 @@ public final class NanoLexer {
 
         double val = parseDouble(start, pos);
 
-        // Проверка процента 25% -> 0.25
-        if (pos < len && src[pos] == '%') {
-            pos++;
-            val = val / 100.0;
+        // Проверка процента 25% -> 0.25 или единиц времени (3s, 500ms, 2m, 1h, 20t)
+        if (pos < len) {
+            char unit = src[pos];
+            if (unit == '%') {
+                pos++;
+                val = val / 100.0;
+            } else if (unit == 'm' && pos + 1 < len && src[pos + 1] == 's') { // ms -> секунды
+                pos += 2;
+                val = val / 1000.0;
+            } else if (unit == 's' && (pos + 1 >= len || !isAlpha(src[pos + 1]))) { // s -> секунды
+                pos++;
+            } else if (unit == 'm' && (pos + 1 >= len || !isAlpha(src[pos + 1]))) { // m -> минуты в секундах
+                pos++;
+                val = val * 60.0;
+            } else if (unit == 'h' && (pos + 1 >= len || !isAlpha(src[pos + 1]))) { // h -> часы в секундах
+                pos++;
+                val = val * 3600.0;
+            } else if (unit == 't' && (pos + 1 >= len || !isAlpha(src[pos + 1]))) { // t -> тики в секундах (20t = 1.0s)
+                pos++;
+                val = val / 20.0;
+            }
         }
 
         return Token.number(start, pos - start, val);

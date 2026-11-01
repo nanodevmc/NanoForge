@@ -72,6 +72,21 @@ public final class BukkitBinding {
                     case "is_swimming": return player.isSwimming();
                     case "is_op": return player.isOp();
                     case "gamemode": return player.getGameMode().name();
+                    case "main_hand": return getItemOrAir(player.getInventory().getItemInMainHand());
+                    case "off_hand": return getItemOrAir(player.getInventory().getItemInOffHand());
+                    case "world_time": return player.getWorld() != null ? (double) player.getWorld().getTime() : 0.0;
+                    case "is_day": {
+                        if (player.getWorld() == null) return true;
+                        long time = player.getWorld().getTime();
+                        return time < 12300 || time > 23850;
+                    }
+                    case "is_night": {
+                        if (player.getWorld() == null) return false;
+                        long time = player.getWorld().getTime();
+                        return time >= 12300 && time <= 23850;
+                    }
+                    case "has_storm": return player.getWorld() != null && player.getWorld().hasStorm();
+                    case "is_thundering": return player.getWorld() != null && player.getWorld().isThundering();
                     default: break;
                 }
             }
@@ -89,6 +104,47 @@ public final class BukkitBinding {
                 if ("damage".equals(p)) return ede.getDamage();
                 if ("final_damage".equals(p)) return ede.getFinalDamage();
                 if ("cause".equals(p)) return ede.getCause().name();
+            }
+        }
+
+        // Свойства ItemStack (предмет в руке)
+        if (target instanceof org.bukkit.inventory.ItemStack) {
+            org.bukkit.inventory.ItemStack item = (org.bukkit.inventory.ItemStack) target;
+            switch (p) {
+                case "type":
+                case "material":
+                    return item.getType().name();
+                case "amount":
+                    return (double) item.getAmount();
+                case "has_custom_model_data":
+                case "has_cmd": {
+                    if (!item.hasItemMeta()) return false;
+                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                    return meta != null && meta.hasCustomModelData();
+                }
+                case "custom_model_data":
+                case "cmd": {
+                    if (!item.hasItemMeta()) return 0.0;
+                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                    return (meta != null && meta.hasCustomModelData()) ? (double) meta.getCustomModelData() : 0.0;
+                }
+                case "display_name":
+                case "name": {
+                    if (!item.hasItemMeta()) return "";
+                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                    return (meta != null && meta.hasDisplayName()) ? meta.getDisplayName() : "";
+                }
+                case "has_display_name": {
+                    if (!item.hasItemMeta()) return false;
+                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                    return meta != null && meta.hasDisplayName();
+                }
+                case "has_lore": {
+                    if (!item.hasItemMeta()) return false;
+                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                    return meta != null && meta.hasLore() && meta.getLore() != null && !meta.getLore().isEmpty();
+                }
+                default: break;
             }
         }
 
@@ -112,6 +168,11 @@ public final class BukkitBinding {
             }
             if ("in_group".equals(m) && args.length >= 1) {
                 return LuckPermsBridge.isInGroup(p, String.valueOf(args[0]));
+            }
+            if (("has_item".equals(m) || "has_material".equals(m)) && args.length >= 1) {
+                String mat = String.valueOf(args[0]);
+                int amount = args.length >= 2 ? (int) toDouble(args[1]) : 1;
+                return hasPlayerItem(p, mat, amount);
             }
         }
 
@@ -206,6 +267,32 @@ public final class BukkitBinding {
                 }
                 return "0";
             }
+            case "online_count":
+            case "online": {
+                try {
+                    return (double) org.bukkit.Bukkit.getOnlinePlayers().size();
+                } catch (Throwable t) {
+                    return 0.0;
+                }
+            }
+            case "cooldown": {
+                // cooldown('name', 3.5s)
+                if (args.length >= 2 && ctx != null && ctx.getPlayer() != null && ctx.getAddon() != null && ctx.getAddon().getStorage() != null) {
+                    String cdKey = String.valueOf(args[0]);
+                    double sec = toDouble(args[1]);
+                    long durationMillis = (long) (sec * 1000L);
+                    return ctx.getAddon().getStorage().checkAndUpdateCooldown(ctx.getPlayer(), cdKey, durationMillis);
+                }
+                return true;
+            }
+            case "has_item": {
+                if (args.length >= 1 && ctx != null && ctx.getPlayer() != null) {
+                    String mat = String.valueOf(args[0]);
+                    int amount = args.length >= 2 ? (int) toDouble(args[1]) : 1;
+                    return hasPlayerItem(ctx.getPlayer(), mat, amount);
+                }
+                return false;
+            }
             default:
                 return null;
         }
@@ -220,5 +307,26 @@ public final class BukkitBinding {
         } catch (Exception e) {
             return 0.0;
         }
+    }
+
+    private static org.bukkit.inventory.ItemStack getItemOrAir(org.bukkit.inventory.ItemStack item) {
+        if (item == null || item.getType() == org.bukkit.Material.AIR) {
+            return new org.bukkit.inventory.ItemStack(org.bukkit.Material.AIR);
+        }
+        return item;
+    }
+
+    private static boolean hasPlayerItem(Player player, String materialName, int count) {
+        if (player == null || materialName == null) return false;
+        org.bukkit.Material mat = org.bukkit.Material.matchMaterial(materialName.toUpperCase());
+        if (mat == null) return false;
+        int found = 0;
+        for (org.bukkit.inventory.ItemStack is : player.getInventory().getContents()) {
+            if (is != null && is.getType() == mat) {
+                found += is.getAmount();
+                if (found >= count) return true;
+            }
+        }
+        return false;
     }
 }

@@ -525,6 +525,32 @@ class ActionRunnerTest {
         ActionRunner.run(Collections.singletonList("message: player, 'Привет из NanoScript'"), player, null);
         verify(player).sendMessage("Привет из NanoScript");
     }
+
+    @Test
+    void cleanShorthandSoundAndParticleNormalization() {
+        Map<String, Object> soundAction = ActionRunner.normalizeAction("sound: player ENTITY_PLAYER_LEVELUP 1.0 1.2");
+        assertThat(soundAction).isNotNull();
+        assertThat(soundAction.get("type")).isEqualTo("sound");
+        assertThat(soundAction.get("target")).isEqualTo("player");
+        assertThat(soundAction.get("sound")).isEqualTo("ENTITY_PLAYER_LEVELUP");
+        assertThat(soundAction.get("volume")).isEqualTo("1.0");
+        assertThat(soundAction.get("pitch")).isEqualTo("1.2");
+
+        Map<String, Object> particleAction = ActionRunner.normalizeAction("particle: victim CRIT 20 0.5 0.1");
+        assertThat(particleAction).isNotNull();
+        assertThat(particleAction.get("type")).isEqualTo("particle");
+        assertThat(particleAction.get("target")).isEqualTo("victim");
+        assertThat(particleAction.get("particle")).isEqualTo("CRIT");
+        assertThat(particleAction.get("count")).isEqualTo("20");
+
+        Map<String, Object> effectAction = ActionRunner.normalizeAction("effect: victim SPEED 5s 2");
+        assertThat(effectAction).isNotNull();
+        assertThat(effectAction.get("type")).isEqualTo("effect");
+        assertThat(effectAction.get("target")).isEqualTo("victim");
+        assertThat(effectAction.get("effect")).isEqualTo("SPEED");
+        assertThat(effectAction.get("duration")).isEqualTo("5s");
+        assertThat(effectAction.get("amplifier")).isEqualTo("2");
+    }
 }
 
 // by t.me/NanoDev_mc

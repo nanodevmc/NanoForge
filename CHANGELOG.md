@@ -643,6 +643,19 @@ warnedMissing`) и один и тот же метод "проверить, ус�
 ### Фиксы
 Исправлен баг, из-за которого `{maxplayers}` / `{MAXPLAYERS}` и `{online}` / `{online_players}` не подставлялись.
 
+## 1.9.1
+
+### NanoScript Supercharged & Clean Actions
+- **Лаконичный позиционный синтаксис экшенов:**
+  - `sound: <target> <SOUND> [volume] [pitch]` (без лишних `key = val`)
+  - `particle: <target> <PARTICLE> [count] [offset] [speed]`
+  - `effect: <target> <EFFECT> <duration> [amplifier]` с поддержкой `3s`, `10t`
+- **Тернарный оператор в NanoScript:** `cond ? val1 : val2` (zero-allocation).
+- **Пайп-оператор (`|`):** потоковая обработка `expr | round | clamp(0, 10)`.
+- **Единицы времени:** автоматический перевод `500ms`, `3s`, `2m`, `1h`, `20t` в секунды.
+- **Свойства предметов и мира:** `player.main_hand.type`, `player.main_hand.custom_model_data`, `player.off_hand`, `is_day`, `world_time`, `online_count()`, `has_item()`.
+- **Встроенный кулдаун в выражениях:** `cooldown('name', 3.5s)`.
+
 ## 1.9.0
 
 ### ɴᴀɴᴏꜱᴄʀɪᴘᴛ (Zero-Allocation Expression Engine & Micro-VM)

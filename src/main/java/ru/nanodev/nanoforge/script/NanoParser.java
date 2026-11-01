@@ -100,6 +100,27 @@ public final class NanoParser {
                 List<ExprNode> args = parseArgList();
                 return new CallNode(left, "", args);
             }
+            case QUESTION: {
+                ExprNode thenArm = parsePrecedence(Precedence.LOWEST);
+                consume(TokenType.COLON, "Expected ':' after '?' in ternary operator");
+                ExprNode elseArm = parsePrecedence(Precedence.ASSIGN);
+                return new TernaryNode(left, thenArm, elseArm);
+            }
+            case PIPE: {
+                Token funcToken = consume(TokenType.IDENTIFIER, "Expected function name after '|'");
+                String func = funcToken.stringVal;
+                List<ExprNode> args = new ArrayList<>();
+                args.add(left);
+                if (match(TokenType.LPAREN)) {
+                    if (!check(TokenType.RPAREN)) {
+                        do {
+                            args.add(parsePrecedence(Precedence.LOWEST));
+                        } while (match(TokenType.COMMA));
+                    }
+                    consume(TokenType.RPAREN, "Expected ')' after argument list in pipe call");
+                }
+                return new CallNode(null, func, args);
+            }
             case PLUS:
             case MINUS:
             case STAR:
@@ -229,6 +250,8 @@ public final class NanoParser {
 
     private enum Precedence {
         LOWEST,
+        ASSIGN,      // ? :
+        PIPE,        // |
         OR,          // ||
         AND,         // &&
         EQUALITY,    // == !=
@@ -242,6 +265,8 @@ public final class NanoParser {
 
     private static Precedence getPrecedence(TokenType type) {
         switch (type) {
+            case QUESTION: return Precedence.ASSIGN;
+            case PIPE: return Precedence.PIPE;
             case PIPE_PIPE: return Precedence.OR;
             case AMP_AMP: return Precedence.AND;
             case EQ_EQ:
@@ -424,6 +449,31 @@ public final class NanoParser {
                 case GT_EQ: emitter.emit(NanoOpcode.OP_GE); break;
                 default: break;
             }
+        }
+    }
+
+    public static final class TernaryNode implements ExprNode {
+        private final ExprNode condition;
+        private final ExprNode thenBranch;
+        private final ExprNode elseBranch;
+
+        public TernaryNode(ExprNode condition, ExprNode thenBranch, ExprNode elseBranch) {
+            this.condition = condition;
+            this.thenBranch = thenBranch;
+            this.elseBranch = elseBranch;
+        }
+
+        @Override
+        public void emit(BytecodeEmitter emitter) {
+            condition.emit(emitter);
+            int elseJump = emitter.emitJump(NanoOpcode.OP_JUMP_IF_FALSE);
+            emitter.emit(NanoOpcode.OP_POP); // снимаем condition (true)
+            thenBranch.emit(emitter);
+            int endJump = emitter.emitJump(NanoOpcode.OP_JUMP);
+            emitter.patchJump(elseJump);
+            emitter.emit(NanoOpcode.OP_POP); // снимаем condition (false)
+            elseBranch.emit(emitter);
+            emitter.patchJump(endJump);
         }
     }
 }

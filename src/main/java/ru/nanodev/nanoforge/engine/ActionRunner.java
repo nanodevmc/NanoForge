@@ -300,21 +300,24 @@ public class ActionRunner {
                         player.getInventory().addItem(stack);
                         break;
                     }
-                    case "play_sound": {
-                        if (player == null) break;
+                    case "play_sound":
+                    case "sound": {
+                        Player soundTarget = resolveTargetPlayer(action, player, event);
+                        if (soundTarget == null) break;
                         String soundName = String.valueOf(action.getOrDefault("sound", "ENTITY_PLAYER_LEVELUP")).toUpperCase();
                         float volume = (float) ru.nanodev.nanoforge.util.NumberUtil.toDouble(action.get("volume"), 1.0);
                         float pitch = (float) ru.nanodev.nanoforge.util.NumberUtil.toDouble(action.get("pitch"), 1.0);
                         try {
                             org.bukkit.Sound sound = org.bukkit.Sound.valueOf(soundName);
-                            player.playSound(player.getLocation(), sound, volume, pitch);
+                            soundTarget.playSound(soundTarget.getLocation(), sound, volume, pitch);
                         } catch (IllegalArgumentException e) {
                             Bukkit.getLogger().warning(ru.nanodev.nanoforge.util.Messages.get("engine.play-sound.unknown-sound", "sound", soundName));
                         }
                         break;
                     }
                     case "particle": {
-                        if (player == null) break;
+                        Player partTarget = resolveTargetPlayer(action, player, event);
+                        if (partTarget == null) break;
                         String particleName = String.valueOf(action.getOrDefault("particle", "FLAME")).toUpperCase();
                         int count = (int) ru.nanodev.nanoforge.util.NumberUtil.toDouble(action.get("count"), 10);
                         double offsetX = ru.nanodev.nanoforge.util.NumberUtil.toDouble(action.get("offset_x"), 0.5);
@@ -323,7 +326,7 @@ public class ActionRunner {
                         double extra = ru.nanodev.nanoforge.util.NumberUtil.toDouble(action.get("extra"), 0.0);
                         try {
                             org.bukkit.Particle particle = org.bukkit.Particle.valueOf(particleName);
-                            player.spawnParticle(particle, player.getLocation(), count, offsetX, offsetY, offsetZ, extra);
+                            partTarget.spawnParticle(particle, partTarget.getLocation(), count, offsetX, offsetY, offsetZ, extra);
                         } catch (IllegalArgumentException e) {
                             Bukkit.getLogger().warning(ru.nanodev.nanoforge.util.Messages.get("engine.particle.unknown-particle", "particle", particleName));
                         }
@@ -383,11 +386,25 @@ public class ActionRunner {
                                 ticks);
                         break;
                     }
-                    case "potion_effect": {
+                    case "potion_effect":
+                    case "effect": {
                         Player effTarget = resolveTargetPlayer(action, player, event);
                         if (effTarget == null) break;
                         String effectName = String.valueOf(action.getOrDefault("effect", "SPEED")).toUpperCase();
-                        int durationTicks = (int) ru.nanodev.nanoforge.util.NumberUtil.toDouble(action.get("duration"), 100);
+                        Object durRaw = action.get("duration");
+                        int durationTicks = 100;
+                        if (durRaw != null) {
+                            String durStr = String.valueOf(durRaw).trim().toLowerCase();
+                            if (durStr.endsWith("s")) {
+                                durationTicks = (int) (ru.nanodev.nanoforge.util.NumberUtil.toDouble(durStr.substring(0, durStr.length() - 1), 5) * 20.0);
+                            } else if (durStr.endsWith("t")) {
+                                durationTicks = (int) ru.nanodev.nanoforge.util.NumberUtil.toDouble(durStr.substring(0, durStr.length() - 1), 100);
+                            } else if (durStr.endsWith("m")) {
+                                durationTicks = (int) (ru.nanodev.nanoforge.util.NumberUtil.toDouble(durStr.substring(0, durStr.length() - 1), 1) * 1200.0);
+                            } else {
+                                durationTicks = (int) ru.nanodev.nanoforge.util.NumberUtil.toDouble(durRaw, 100);
+                            }
+                        }
                         int amplifier = (int) ru.nanodev.nanoforge.util.NumberUtil.toDouble(action.get("amplifier"), 0);
                         boolean ambient = Boolean.parseBoolean(String.valueOf(action.getOrDefault("ambient", "false")));
                         boolean particles = Boolean.parseBoolean(String.valueOf(action.getOrDefault("particles", "true")));
@@ -700,6 +717,50 @@ public class ActionRunner {
             map.put("type", "script");
             map.put("code", stripQuotes(rest));
             return map;
+        }
+
+        // Чистый позиционный синтаксис без запятых: sound: attacker ENTITY_PLAYER_LEVELUP 1.0 1.2
+        if ("sound".equals(type) || "play_sound".equals(type)) {
+            map.put("type", "sound");
+            if (!rest.contains("=") && !rest.contains(",")) {
+                String[] tokens = rest.split("\\s+");
+                if (tokens.length >= 1) map.put("target", tokens[0]);
+                if (tokens.length >= 2) map.put("sound", tokens[1]);
+                if (tokens.length >= 3) map.put("volume", tokens[2]);
+                if (tokens.length >= 4) map.put("pitch", tokens[3]);
+                return map;
+            }
+        }
+
+        // Чистый позиционный синтаксис: particle: victim CRIT 20 0.5 0.1
+        if ("particle".equals(type)) {
+            map.put("type", "particle");
+            if (!rest.contains("=") && !rest.contains(",")) {
+                String[] tokens = rest.split("\\s+");
+                if (tokens.length >= 1) map.put("target", tokens[0]);
+                if (tokens.length >= 2) map.put("particle", tokens[1]);
+                if (tokens.length >= 3) map.put("count", tokens[2]);
+                if (tokens.length >= 4) {
+                    map.put("offset_x", tokens[3]);
+                    map.put("offset_y", tokens[3]);
+                    map.put("offset_z", tokens[3]);
+                }
+                if (tokens.length >= 5) map.put("extra", tokens[4]);
+                return map;
+            }
+        }
+
+        // Чистый позиционный синтаксис: effect: victim BLINDNESS 3s 1
+        if ("effect".equals(type) || "potion_effect".equals(type)) {
+            map.put("type", "effect");
+            if (!rest.contains("=") && !rest.contains(",")) {
+                String[] tokens = rest.split("\\s+");
+                if (tokens.length >= 1) map.put("target", tokens[0]);
+                if (tokens.length >= 2) map.put("effect", tokens[1]);
+                if (tokens.length >= 3) map.put("duration", tokens[2]);
+                if (tokens.length >= 4) map.put("amplifier", tokens[3]);
+                return map;
+            }
         }
 
         map.put("type", type);

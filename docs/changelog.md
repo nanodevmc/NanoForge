@@ -2,14 +2,29 @@
 
 <div align="center">
 
-<img src="https://img.shields.io/badge/Версия-v1.9.0-00FF9C?style=for-the-badge&logoColor=black" alt="Version 1.9.0"/>
+<img src="https://img.shields.io/badge/Версия-v1.9.1-00FF9C?style=for-the-badge&logoColor=black" alt="Version 1.9.0"/>
 <img src="https://img.shields.io/badge/Статус-Release-2c5364?style=for-the-badge" alt="Status"/>
 
 </div>
 
 ---
 
-## ⚡ Версия 1.9.0 *(Текущая)*
+## ⚡ Версия 1.9.1 *(Текущая)*
+
+### 🚀 NanoScript Supercharged & Clean Actions
+* **Лаконичный позиционный синтаксис экшенов:**
+  * Звуки: `sound: <target> <SOUND> [volume] [pitch]`
+  * Партиклы: `particle: <target> <PARTICLE> [count] [offset] [speed]`
+  * Эффекты: `effect: <target> <EFFECT> <duration> [amplifier]`
+* **Тернарный оператор в NanoScript:** `cond ? val1 : val2` в zero-allocation цикле.
+* **Пайп-оператор (`|`):** `expr | round | clamp(0, 10)` потоком.
+* **Единицы времени в формулах:** `500ms`, `3s`, `2m`, `1h`, `20t`.
+* **Свойства предметов в руках и мира:** `player.main_hand.type`, `custom_model_data`, `is_day`, `world_time`, `online_count()`.
+* **Встроенный таймер кулдауна:** `cooldown('name', 3.5s)` прямо в условиях.
+
+---
+
+## ⚡ Версия 1.9.0
 
 ### 🚀 ɴᴀɴᴏꜱᴄʀɪᴘᴛ (Zero-Allocation Expression Engine & Micro-VM)
 * **Zero-Allocation в тике:** движок вычисляет сложные формулы в кольцевом буфере стека (`ThreadLocal<NanoStackFrame>`), полностью исключая создание мусорных объектов в памяти JVM во время боя и частых событий.
