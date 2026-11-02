@@ -643,24 +643,51 @@ warnedMissing`) и один и тот же метод "проверить, ус�
 ### Фиксы
 Исправлен баг, из-за которого `{maxplayers}` / `{MAXPLAYERS}` и `{online}` / `{online_players}` не подставлялись.
 
-## 1.9.3
+## 1.8.0
 
-### ⚡ 4 Ключевых модуля: NanoJIT, NanoMesh, NanoDungeon, NanoLens
-- **NanoJIT (Runtime Just-In-Time Compiler):**
-  - Адаптивная JIT-компиляция горячих участков формул NanoScript (Hot-Paths > 20 вызовов) в прямые скомпилированные функции.
-  - Zero-allocation в бою, прямой доступ к полям и методам, максимальная скорость выполнения на уровне нативного Java-кода.
-- **NanoMesh (Cross-Server Sync & Cluster Bus):**
-  - Поддержка межсерверной синхронизации через Velocity/BungeeCord Plugin Messaging (`nanoforge:cluster`) и нативный легковесный сокет Redis.
-  - Глобальные переменные аддонов (`setvar: key, value, scope: network`), кросс-серверные оповещения `network_broadcast:` и события `network_event:`.
-  - Bukkit-событие `NanoNetworkEvent` с триггером `trigger: network`.
-- **NanoDungeon (Procedural Instances & Auto-Mines):**
-  - Движок процедурных данжей, шахт и арен на базе нативного Bukkit `StructureManager` (`.nbt`) и процедурных кубов.
-  - Автоматическая фиксация и откат замененных блоков (`restore()`) по истечении таймера инстанса.
-  - Действия: `dungeon_spawn: id, template, duration`, `dungeon_reset: id`, `dungeon_clear: id`.
-- **NanoLens (HUD Debugger, Hot-Swap & Profiler):**
-  - Фоновый демон `AddonFileWatcher` на Java `WatchService`: мгновенная горячая перезагрузка аддона при сохранении файла без команды `/nano reload`.
-  - Высокоточный профайлер нагрузки аддонов в микросекундах (`/nano profile`).
-  - Режим инспектора векторов и лучей рейтрейсинга (`/nano inspect`).
+### Компилятор YAML в автономный JAR (`/nano compile`)
+- Команда `/nano compile <аддон> [версия]` пакует аддон или мини-плагин в готовый автономный `.jar` в `plugins/NanoForge/compiled/`.
+- Работает на сервере без необходимости установки NanoForge.
+- Автоматически прописывает `depend: [<плагин>]` в `plugin.yml`, если аддон сделан к другому плагину.
+
+### Поддержка сторонних библиотек (`libraries:`)
+- В `addon.yml` добавлена секция `libraries:` с координатами Maven Central (`groupId:artifactId:version`).
+- `LibraryManager` скачивает jar-файлы в `plugins/NanoForge/libraries/` и динамически загружает их в рантайм ClassLoader.
+
+### Поддержка баз данных (SQLite и MySQL)
+- Секция `database:` в `addon.yml` (тип `sqlite` или `mysql`).
+- Новые действия `db_execute` и `db_query` с плейсхолдерами, параметризацией и сохранением в переменные (`save_as`).
+
+### Автоподстановка виртуальных плагинов
+- Если аддон нацелен на сторонний плагин, которого нет на сервере, NanoForge регистрирует виртуальный экземпляр этого плагина, не допуская падений.
+
+## 1.9.0
+
+### ɴᴀɴᴏꜱᴄʀɪᴘᴛ (Zero-Allocation Expression Engine & Micro-VM)
+- **Лексер и Pratt-парсер:** Посимвольный разбор без выделения лишних строк (`String`), поддержка процентов (`25%` → `0.25`), логических и арифметических выражений, скобок, операторов сравнения.
+- **Constant Folding:** Сворачивание константных выражений на этапе компиляции (например, `5 + 5 * 2` сразу превращается в `15.0`).
+- **Стековая Micro-VM:** Компиляция выражений в плоский массив кодов инструкций `int[] code`.
+- **Zero-Allocation в тике:** Исполнение через переиспользуемые кольцевые стековые фреймы `ThreadLocal<NanoStackFrame>` без аллокаций объектов на куче (0 bytes garbage) во время боя или частых проверок.
+- **Fast-Path Bukkit Binding:** Прямое обращение к свойствам сущностей и мира (`player.health`, `player.food`, `player.level`, `attacker.*`, `victim.*`, `event.damage`), методам (`has_perm`, `distance_to`, `in_group`) и глобальным функциям (`chance(25%)`, `min`, `max`, `abs`, `round`, `clamp`).
+- **Интеграция в YAML и Actions:**
+  - Поддержка скриптовых условий в `condition: "..."` и блоках `if: { script: "..." }`.
+  - Новый тип действия `type: script` с сохранением результата.
+  - Динамические математические вычисления в плейсхолдерах: `+{event.damage * 0.35} ❤`.
+  - Компактный формат действий: `heal: attacker, amount = event.damage * 0.35`.
+- **Консольная и внутриигровая команда:** `/nano script <test|eval|disasm> <выражение>`.
+
+## 1.9.1
+
+### NanoScript Supercharged & Clean Actions
+- **Лаконичный позиционный синтаксис экшенов:**
+  - `sound: <target> <SOUND> [volume] [pitch]` (без лишних `key = val`)
+  - `particle: <target> <PARTICLE> [count] [offset] [speed]`
+  - `effect: <target> <EFFECT> <duration> [amplifier]` с поддержкой `3s`, `10t`
+- **Тернарный оператор в NanoScript:** `cond ? val1 : val2` (zero-allocation).
+- **Пайп-оператор (`|`):** потоковая обработка `expr | round | clamp(0, 10)`.
+- **Единицы времени:** автоматический перевод `500ms`, `3s`, `2m`, `1h`, `20t` в секунды.
+- **Свойства предметов и мира:** `player.main_hand.type`, `player.main_hand.custom_model_data`, `player.off_hand`, `is_day`, `world_time`, `online_count()`, `has_item()`.
+- **Встроенный кулдаун в выражениях:** `cooldown('name', 3.5s)`.
 
 ## 1.9.2
 
@@ -682,51 +709,23 @@ warnedMissing`) и один и тот же метод "проверить, ус�
   - Легковесные парящие голограммы и индикаторы урона на базе маркеров ArmorStand без сторонних плагинов (1.16-1.21.x).
   - Настройка времени жизни (`2s`, `40t`), смещения (`offset_y`) и плавного подъёма (`velocity_y`).
 
-## 1.9.1
+## 1.9.3
 
-### NanoScript Supercharged & Clean Actions
-- **Лаконичный позиционный синтаксис экшенов:**
-  - `sound: <target> <SOUND> [volume] [pitch]` (без лишних `key = val`)
-  - `particle: <target> <PARTICLE> [count] [offset] [speed]`
-  - `effect: <target> <EFFECT> <duration> [amplifier]` с поддержкой `3s`, `10t`
-- **Тернарный оператор в NanoScript:** `cond ? val1 : val2` (zero-allocation).
-- **Пайп-оператор (`|`):** потоковая обработка `expr | round | clamp(0, 10)`.
-- **Единицы времени:** автоматический перевод `500ms`, `3s`, `2m`, `1h`, `20t` в секунды.
-- **Свойства предметов и мира:** `player.main_hand.type`, `player.main_hand.custom_model_data`, `player.off_hand`, `is_day`, `world_time`, `online_count()`, `has_item()`.
-- **Встроенный кулдаун в выражениях:** `cooldown('name', 3.5s)`.
-
-## 1.9.0
-
-### ɴᴀɴᴏꜱᴄʀɪᴘᴛ (Zero-Allocation Expression Engine & Micro-VM)
-- **Лексер и Pratt-парсер:** Посимвольный разбор без выделения лишних строк (`String`), поддержка процентов (`25%` → `0.25`), логических и арифметических выражений, скобок, операторов сравнения.
-- **Constant Folding:** Сворачивание константных выражений на этапе компиляции (например, `5 + 5 * 2` сразу превращается в `15.0`).
-- **Стековая Micro-VM:** Компиляция выражений в плоский массив кодов инструкций `int[] code`.
-- **Zero-Allocation в тике:** Исполнение через переиспользуемые кольцевые стековые фреймы `ThreadLocal<NanoStackFrame>` без аллокаций объектов на куче (0 bytes garbage) во время боя или частых проверок.
-- **Fast-Path Bukkit Binding:** Прямое обращение к свойствам сущностей и мира (`player.health`, `player.food`, `player.level`, `attacker.*`, `victim.*`, `event.damage`), методам (`has_perm`, `distance_to`, `in_group`) и глобальным функциям (`chance(25%)`, `min`, `max`, `abs`, `round`, `clamp`).
-- **Интеграция в YAML и Actions:**
-  - Поддержка скриптовых условий в `condition: "..."` и блоках `if: { script: "..." }`.
-  - Новый тип действия `type: script` с сохранением результата.
-  - Динамические математические вычисления в плейсхолдерах: `+{event.damage * 0.35} ❤`.
-  - Компактный формат действий: `heal: attacker, amount = event.damage * 0.35`.
-- **Консольная и внутриигровая команда:** `/nano script <test|eval|disasm> <выражение>`.
-
-## 1.8.0
-
-### Компилятор YAML в автономный JAR (`/nano compile`)
-- Команда `/nano compile <аддон> [версия]` пакует аддон или мини-плагин в готовый автономный `.jar` в `plugins/NanoForge/compiled/`.
-- Работает на сервере без необходимости установки NanoForge.
-- Автоматически прописывает `depend: [<плагин>]` в `plugin.yml`, если аддон сделан к другому плагину.
-
-### Поддержка сторонних библиотек (`libraries:`)
-- В `addon.yml` добавлена секция `libraries:` с координатами Maven Central (`groupId:artifactId:version`).
-- `LibraryManager` скачивает jar-файлы в `plugins/NanoForge/libraries/` и динамически загружает их в рантайм ClassLoader.
-
-### Поддержка баз данных (SQLite и MySQL)
-- Секция `database:` в `addon.yml` (тип `sqlite` или `mysql`).
-- Новые действия `db_execute` и `db_query` с плейсхолдерами, параметризацией и сохранением в переменные (`save_as`).
-
-### Автоподстановка виртуальных плагинов
-- Если аддон нацелен на сторонний плагин, которого нет на сервере, NanoForge регистрирует виртуальный экземпляр этого плагина, не допуская падений.
+### ⚡ 4 Ключевых модуля: NanoJIT, NanoMesh, NanoDungeon, NanoLens
+- **NanoJIT (Runtime Just-In-Time Compiler):**
+  - Адаптивная JIT-компиляция горячих участков формул NanoScript (Hot-Paths > 20 вызовов) в прямые скомпилированные функции.
+  - Zero-allocation в бою, прямой доступ к полям и методам, максимальная скорость выполнения на уровне нативного Java-кода.
+- **NanoMesh (Cross-Server Sync & Cluster Bus):**
+  - Поддержка межсерверной синхронизации через Velocity/BungeeCord Plugin Messaging (`nanoforge:cluster`) и нативный легковесный сокет Redis.
+  - Глобальные переменные аддонов (`setvar: key, value, scope: network`), кросс-серверные оповещения `network_broadcast:` и события `network_event:`.
+  - Bukkit-событие `NanoNetworkEvent` с триггером `trigger: network`.
+- **NanoDungeon (Procedural Instances & Auto-Mines):**
+  - Движок процедурных данжей, шахт и арен на базе нативного Bukkit `StructureManager` (`.nbt`) и процедурных кубов.
+  - Автоматическая фиксация и откат замененных блоков (`restore()`) по истечении таймера инстанса.
+  - Действия: `dungeon_spawn: id, template, duration`, `dungeon_reset: id`, `dungeon_clear: id`.
+- **NanoLens (HUD Debugger, Hot-Swap & Profiler):**
+  - Фоновый демон `AddonFileWatcher` на Java `WatchService`: мгновенная горячая перезагрузка аддона при сохранении файла без команды `/nano reload`.
+  - Высокоточный профайлер нагрузки аддонов в микросекундах (`/nano profile`).
+  - Режим инспектора векторов и лучей рейтрейсинга (`/nano inspect`).
 
 <!-- by t.me/NanoDev_mc -->
-
